@@ -246,7 +246,7 @@ function render() {
   }
 
   if (!gistLoaded) {
-    app.innerHTML = `<div style="text-align:center;padding:60px 20px"><div class="loader" style="width:32px;height:32px;border-width:3px"></div><p style="margin-top:12px;color:#6b7280">Chargement...</p></div>`;
+    app.innerHTML = `<div style="text-align:center;padding:60px 20px"><div class="loader" style="width:32px;height:32px;border-width:3px"></div><p style="margin-top:12px;color:#6b7280">Chargement...</p><button class="btn btn-outline" style="max-width:200px;margin:16px auto;padding:10px" onclick="gistLoaded=true;render()">Passer</button></div>`;
     return;
   }
 
@@ -506,7 +506,9 @@ function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,
 // ─── Init ───
 if (isConfigured()) {
   render(); // show loading
-  gistFetch().then(() => render()).catch(e => { state.error = e.message; render(); });
+  gistFetch()
+    .then(() => render())
+    .catch(e => { state.error = e.message; gistLoaded = true; render(); });
 } else {
   render();
 }
