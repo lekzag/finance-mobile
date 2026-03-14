@@ -276,7 +276,6 @@ function renderSetup() {
     <div class="not-configured">
       <h2>Finance Mobile</h2>
       <p>Configurez votre token GitHub pour commencer.<br>Les transactions sont stockées directement dans un Gist privé.</p>
-      <button onclick="switchTab('config'); state.tab='config'; render()">Configurer</button>
     </div>
     ${renderConfig()}
   `;
@@ -484,6 +483,10 @@ function saveCfg(key, val) {
   const cfg = getConfig();
   cfg[key] = val.trim();
   saveConfig(cfg);
+  // If token was just set and gist not loaded yet, auto-connect
+  if (key === 'github_token' && val.trim() && !gistLoaded) {
+    initGist();
+  }
 }
 
 async function initGist() {
