@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Finance - Ajout rapide</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; -webkit-text-size-adjust: 100%; }
+
+  .app { max-width: 480px; margin: 0 auto; padding: 12px; min-height: 100vh; display: flex; flex-direction: column; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 16px; }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .tab-bar { display: flex; gap: 4px; background: #e5e7eb; border-radius: 10px; padding: 3px; }
+  .tab { padding: 8px 16px; border-radius: 8px; border: none; background: none; font-size: 13px; font-weight: 600; color: #6b7280; cursor: pointer; }
+  .tab.active { background: white; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 12px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #4b5563; margin-bottom: 6px; }
+  input, select, textarea { width: 100%; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+  input:focus, select:focus, textarea:focus { border-color: #3b82f6; }
+  textarea { resize: none; height: 60px; }
+  .amount-input { font-size: 28px; font-weight: 700; text-align: center; padding: 16px; }
+
+  .type-toggle { display: flex; gap: 8px; }
+  .type-btn { flex: 1; padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; text-align: center; background: white; transition: all 0.2s; }
+  .type-btn.expense.active { background: #fef2f2; border-color: #ef4444; color: #dc2626; }
+  .type-btn.revenue.active { background: #f0fdf4; border-color: #22c55e; color: #16a34a; }
+
+  .cat-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cat-chip { padding: 8px 14px; border-radius: 20px; border: 1.5px solid #e5e7eb; background: white; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .cat-chip.active { background: #eff6ff; border-color: #3b82f6; color: #2563eb; }
+  .cat-chip.sub { font-size: 12px; padding: 6px 12px; }
+
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: #3b82f6; color: white; }
+  .btn-primary:active { background: #2563eb; transform: scale(0.98); }
+  .btn-danger { background: #ef4444; color: white; font-size: 13px; padding: 10px; }
+  .btn-warn { background: #f59e0b; color: white; }
+  .btn:disabled { opacity: 0.5; }
+
+  .tx-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+  .tx-item:last-child { border-bottom: none; }
+  .tx-info { flex: 1; min-width: 0; cursor: pointer; }
+  .tx-desc { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+  .tx-amount { font-size: 15px; font-weight: 700; margin-left: 12px; white-space: nowrap; }
+  .tx-amount.expense { color: #ef4444; }
+  .tx-amount.revenue { color: #22c55e; }
+  .tx-actions { display: flex; gap: 2px; margin-left: 8px; }
+  .tx-btn { padding: 6px 8px; background: none; border: none; font-size: 16px; cursor: pointer; border-radius: 6px; }
+  .tx-btn:active { background: #f3f4f6; }
+  .tx-btn.edit { color: #3b82f6; }
+  .tx-btn.delete { color: #d1d5db; }
+  .tx-btn.delete:active { color: #ef4444; }
+
+  .status-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; }
+  .status-bar.ok { background: #f0fdf4; color: #166534; }
+  .status-bar.err { background: #fef2f2; color: #991b1b; }
+  .status-bar.warn { background: #fefce8; color: #854d0e; }
+  .status-bar.info { background: #eff6ff; color: #1e40af; }
+
+  .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: #ef4444; color: white; font-size: 11px; font-weight: 700; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 100; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+
+  .config-field { margin-bottom: 12px; }
+  .config-field input { font-size: 13px; font-family: monospace; }
+  .config-field .hint { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+  .edit-banner { background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .edit-banner span { font-size: 13px; font-weight: 600; color: #2563eb; }
+  .edit-banner button { padding: 4px 12px; border: 1px solid #93c5fd; border-radius: 6px; background: white; color: #2563eb; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+  .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .not-configured { text-align: center; padding: 40px 20px; }
+  .not-configured h2 { font-size: 18px; margin-bottom: 8px; }
+  .not-configured p { font-size: 14px; color: #6b7280; margin-bottom: 16px; }
+  .not-configured button { padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app"></div>
+
+<script>
+// ─── Config ───
+const CONFIG_KEY = 'finance_config';
+const GIST_FILENAME = 'finance_sync.json';
+
+function getConfig() {
+  return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
+}
+function saveConfig(cfg) {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+function isConfigured() {
+  const cfg = getConfig();
+  return !!(cfg.github_token);
+}
+
+// ─── Gist as database ───
+let gistTxs = []; // in-memory cache of gist transactions
+let gistLoaded = false;
+let gistLoading = false;
+
+async function gistFetch() {
+  const cfg = getConfig();
+  if (!cfg.github_token) throw new Error('Token non configuré');
+
+  if (!cfg.gist_id) {
+    // No gist yet, start empty
+    gistTxs = [];
+    gistLoaded = true;
+    return;
+  }
+
+  const res = await fetch(`https://api.github.com/gists/${cfg.gist_id}`, {
+    headers: { 'Authorization': `token ${cfg.github_token}` }
+  });
+  if (!res.ok) throw new Error(`Erreur GitHub: ${res.status}`);
+  const data = await res.json();
+  try {
+    gistTxs = JSON.parse(data.files[GIST_FILENAME]?.content || '[]');
+  } catch { gistTxs = []; }
+  gistLoaded = true;
+}
+
+async function gistSave() {
+  const cfg = getConfig();
+  if (!cfg.github_token) throw new Error('Token non configuré');
+
+  const content = JSON.stringify(gistTxs, null, 2);
+
+  if (cfg.gist_id) {
+    const res = await fetch(`https://api.github.com/gists/${cfg.gist_id}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `token ${cfg.github_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ files: { [GIST_FILENAME]: { content } } })
+    });
+    if (!res.ok) throw new Error(`Erreur sauvegarde: ${res.status}`);
+  } else {
+    const res = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: { 'Authorization': `token ${cfg.github_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        description: 'Finance App - Sync',
+        public: false,
+        files: { [GIST_FILENAME]: { content } }
+      })
+    });
+    if (!res.ok) throw new Error(`Erreur création Gist: ${res.status}`);
+    const data = await res.json();
+    cfg.gist_id = data.id;
+    saveConfig(cfg);
+  }
+}
+
+async function gistAddTx(txData) {
+  const tx = {
+    ...txData,
+    id: 'mob_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    created_at: new Date().toISOString(),
+  };
+  gistTxs.push(tx);
+  await gistSave();
+  return tx;
+}
+
+async function gistUpdateTx(id, data) {
+  const idx = gistTxs.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  gistTxs[idx] = { ...gistTxs[idx], ...data };
+  await gistSave();
+}
+
+async function gistDeleteTx(id) {
+  gistTxs = gistTxs.filter(t => t.id !== id);
+  await gistSave();
+}
+
+// ─── Categories ───
+const CATEGORIES = {
+  expense: {
+    "Alimentaire": ["Supermarché", "Magasin Bio", "Alimentation en ligne", "Divers Alimentation"],
+    "Logement": ["Loyer", "Factures", "Mobilier"],
+    "Transports": ["Transports Publics", "Covoiturage"],
+    "Loisirs": ["Bar Et Café", "Divertissements", "Divers Loisirs"],
+    "Restaurant": [],
+    "Divers": ["Hygiène", "Esthétique", "Adhésion", "Impôts"],
+    "Dépenses médicales": [],
+    "Vêtements": [],
+    "Informatique/électronique": [],
+    "Livres": [],
+    "Téléphone": [],
+    "Dons": [],
+    "Voyage": ["Alimentation Voyage", "Transport Voyage"],
+    "Équipements": [],
+  },
+  revenue: {
+    "Salaire": [],
+    "Tickets Restaurant": [],
+    "Remboursement Perso": [],
+    "Dons reçus": [],
+    "Ventes": [],
+    "Intérêts Financiers": [],
+  }
+};
+
+// ─── App State ───
+let state = {
+  tab: 'add',
+  editingId: null,
+  form: { type: 'expense', amount: '', description: '', date: new Date().toISOString().slice(0, 10), category: '', subcategory: '', notes: '' },
+  toast: null,
+  saving: false,
+  error: null,
+};
+
+function resetForm() {
+  state.editingId = null;
+  state.form = { type: 'expense', amount: '', description: '', date: new Date().toISOString().slice(0, 10), category: '', subcategory: '', notes: '' };
+}
+
+function showToast(msg) {
+  state.toast = msg;
+  render();
+  setTimeout(() => { state.toast = null; render(); }, 2000);
+}
+
+// ─── Render ───
+function render() {
+  const app = document.getElementById('app');
+
+  if (!isConfigured()) {
+    app.innerHTML = renderSetup();
+    return;
+  }
+
+  if (!gistLoaded) {
+    app.innerHTML = `<div style="text-align:center;padding:60px 20px"><div class="loader" style="width:32px;height:32px;border-width:3px"></div><p style="margin-top:12px;color:#6b7280">Chargement...</p></div>`;
+    return;
+  }
+
+  const count = gistTxs.length;
+
+  app.innerHTML = `
+    <div class="header">
+      <h1>Finance</h1>
+      <div class="tab-bar">
+        <button class="tab ${state.tab === 'add' ? 'active' : ''}" onclick="switchTab('add')">Ajouter</button>
+        <button class="tab ${state.tab === 'list' ? 'active' : ''}" onclick="switchTab('list')">
+          Liste ${count > 0 ? `<span class="badge">${count}</span>` : ''}
+        </button>
+        <button class="tab ${state.tab === 'config' ? 'active' : ''}" onclick="switchTab('config')">Config</button>
+      </div>
+    </div>
+    ${state.error ? `<div class="status-bar err">${escHtml(state.error)}</div>` : ''}
+    ${state.tab === 'add' ? renderAdd() : ''}
+    ${state.tab === 'list' ? renderList() : ''}
+    ${state.tab === 'config' ? renderConfig() : ''}
+    ${state.toast ? `<div class="toast">${escHtml(state.toast)}</div>` : ''}
+  `;
+}
+
+function renderSetup() {
+  return `
+    <div class="not-configured">
+      <h2>Finance Mobile</h2>
+      <p>Configurez votre token GitHub pour commencer.<br>Les transactions sont stockées directement dans un Gist privé.</p>
+      <button onclick="switchTab('config'); state.tab='config'; render()">Configurer</button>
+    </div>
+    ${renderConfig()}
+  `;
+}
+
+function renderAdd() {
+  const f = state.form;
+  const isEditing = state.editingId !== null;
+  const cats = CATEGORIES[f.type] || {};
+  const subcats = cats[f.category] || [];
+
+  return `
+    ${isEditing ? `
+      <div class="edit-banner">
+        <span>Modification en cours</span>
+        <button onclick="cancelEdit()">Annuler</button>
+      </div>
+    ` : ''}
+    <div class="card">
+      <div class="form-group">
+        <div class="type-toggle">
+          <button class="type-btn expense ${f.type === 'expense' ? 'active' : ''}" onclick="setType('expense')">Dépense</button>
+          <button class="type-btn revenue ${f.type === 'revenue' ? 'active' : ''}" onclick="setType('revenue')">Revenu</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Montant (EUR)</label>
+        <input type="number" class="amount-input" inputmode="decimal" step="0.01" min="0"
+          placeholder="0,00" value="${f.amount}" oninput="setField('amount', this.value)" id="amount-field">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" placeholder="Ex: Courses Leclerc" value="${escHtml(f.description)}"
+          oninput="setField('description', this.value)">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" value="${f.date}" oninput="setField('date', this.value)">
+      </div>
+      <div class="form-group">
+        <label>Catégorie</label>
+        <div class="cat-grid">
+          ${Object.keys(cats).map(c => `
+            <button class="cat-chip ${f.category === c ? 'active' : ''}" onclick="setCat('${escAttr(c)}')">${escHtml(c)}</button>
+          `).join('')}
+        </div>
+        <input type="text" style="margin-top:8px" placeholder="Ou saisir une nouvelle..."
+          value="${escHtml(f.category)}" oninput="setField('category', this.value)">
+      </div>
+      ${subcats.length > 0 || f.category ? `
+        <div class="form-group">
+          <label>Sous-catégorie</label>
+          ${subcats.length > 0 ? `
+            <div class="cat-grid">
+              ${subcats.map(s => `
+                <button class="cat-chip sub ${f.subcategory === s ? 'active' : ''}" onclick="setSubcat('${escAttr(s)}')">${escHtml(s)}</button>
+              `).join('')}
+            </div>
+          ` : ''}
+          <input type="text" style="margin-top:8px" placeholder="Ou saisir..."
+            value="${escHtml(f.subcategory)}" oninput="setField('subcategory', this.value)">
+        </div>
+      ` : ''}
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea placeholder="Optionnel" oninput="setField('notes', this.value)">${escHtml(f.notes)}</textarea>
+      </div>
+    </div>
+    <button class="btn ${isEditing ? 'btn-warn' : 'btn-primary'}" onclick="submitTx()" ${state.saving ? 'disabled' : ''} style="margin-bottom:12px">
+      ${state.saving ? '<span class="loader"></span>' : ''} ${isEditing ? 'Modifier' : 'Enregistrer'}
+    </button>
+  `;
+}
+
+function renderList() {
+  return `
+    <div class="card">
+      ${gistTxs.length === 0 ? '<p style="text-align:center;color:#9ca3af;padding:20px 0">Aucune transaction en attente</p>' : ''}
+      ${gistTxs.slice().reverse().map(tx => `
+        <div class="tx-item">
+          <div class="tx-info" onclick="editTx('${tx.id}')">
+            <div class="tx-desc">${escHtml(tx.description)}</div>
+            <div class="tx-meta">${tx.date} &middot; ${escHtml(tx.category)}${tx.subcategory ? ' &rsaquo; ' + escHtml(tx.subcategory) : ''}</div>
+          </div>
+          <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${parseFloat(tx.amount).toFixed(2)} &euro;</div>
+          <div class="tx-actions">
+            <button class="tx-btn edit" onclick="editTx('${tx.id}')" title="Modifier">&#9998;</button>
+            <button class="tx-btn delete" onclick="removeTx('${tx.id}')" title="Supprimer">&times;</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="status-bar info" style="margin-top:4px">
+      ${gistTxs.length} transaction(s) en attente d'import sur le desktop
+    </div>
+  `;
+}
+
+function renderConfig() {
+  const cfg = getConfig();
+  return `
+    <div class="card">
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:16px">Configuration GitHub Gist</h3>
+      <div class="config-field">
+        <label>Token GitHub (scope: gist)</label>
+        <input type="password" value="${escAttr(cfg.github_token || '')}" placeholder="ghp_..."
+          onchange="saveCfg('github_token', this.value)">
+        <div class="hint">github.com/settings/tokens &gt; scope "gist" uniquement</div>
+      </div>
+      <div class="config-field">
+        <label>Gist ID (auto-rempli après 1er ajout)</label>
+        <input type="text" value="${escAttr(cfg.gist_id || '')}" placeholder="Sera créé automatiquement"
+          onchange="saveCfg('gist_id', this.value)">
+        <div class="hint">Laissez vide pour créer un nouveau Gist</div>
+      </div>
+      ${!gistLoaded && isConfigured() ? `
+        <button class="btn btn-primary" onclick="initGist()" style="margin-top:8px">Connecter</button>
+      ` : ''}
+    </div>
+  `;
+}
+
+// ─── Actions ───
+function switchTab(tab) {
+  if (tab !== 'add' && state.editingId) resetForm();
+  state.tab = tab;
+  render();
+}
+function setField(key, val) { state.form[key] = val; }
+function setType(type) { state.form.type = type; state.form.category = ''; state.form.subcategory = ''; render(); }
+function setCat(cat) { state.form.category = cat; state.form.subcategory = ''; render(); }
+function setSubcat(sub) { state.form.subcategory = sub; render(); }
+
+function editTx(id) {
+  const tx = gistTxs.find(t => t.id === id);
+  if (!tx) return;
+  state.editingId = id;
+  state.form = {
+    type: tx.type, amount: String(tx.amount), description: tx.description,
+    date: tx.date, category: tx.category, subcategory: tx.subcategory || '', notes: tx.notes || '',
+  };
+  state.tab = 'add';
+  render();
+  window.scrollTo(0, 0);
+}
+
+function cancelEdit() { resetForm(); render(); }
+
+async function submitTx() {
+  const f = state.form;
+  if (!f.amount || !f.description || !f.category) {
+    showToast('Remplissez montant, description et catégorie');
+    return;
+  }
+
+  const data = {
+    date: f.date, description: f.description.trim(), notes: f.notes.trim() || null,
+    type: f.type, category: f.category.trim(), subcategory: f.subcategory.trim() || null,
+    amount: Math.abs(parseFloat(f.amount)),
+  };
+
+  state.saving = true;
+  state.error = null;
+  render();
+
+  try {
+    if (state.editingId) {
+      await gistUpdateTx(state.editingId, data);
+      showToast('Transaction modifiée');
+    } else {
+      await gistAddTx(data);
+      showToast('Transaction enregistrée');
+    }
+    const keepDate = f.date;
+    const keepType = f.type;
+    resetForm();
+    state.form.date = keepDate;
+    state.form.type = keepType;
+  } catch (e) {
+    state.error = e.message;
+  } finally {
+    state.saving = false;
+    render();
+  }
+}
+
+async function removeTx(id) {
+  if (!confirm('Supprimer cette transaction ?')) return;
+  if (state.editingId === id) resetForm();
+  state.saving = true;
+  state.error = null;
+  render();
+  try {
+    await gistDeleteTx(id);
+    showToast('Transaction supprimée');
+  } catch (e) {
+    state.error = e.message;
+  } finally {
+    state.saving = false;
+    render();
+  }
+}
+
+function saveCfg(key, val) {
+  const cfg = getConfig();
+  cfg[key] = val.trim();
+  saveConfig(cfg);
+}
+
+async function initGist() {
+  gistLoading = true;
+  render();
+  try {
+    await gistFetch();
+  } catch (e) {
+    state.error = e.message;
+  } finally {
+    gistLoading = false;
+    render();
+  }
+}
+
+// ─── Helpers ───
+function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+// ─── Init ───
+if (isConfigured()) {
+  render(); // show loading
+  gistFetch().then(() => render()).catch(e => { state.error = e.message; render(); });
+} else {
+  render();
+}
+</script>
+</body>
+</html>
