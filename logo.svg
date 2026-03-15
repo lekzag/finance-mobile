@@ -5,11 +5,11 @@
       <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
     <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#14b8a6"/>
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#2dd4bf"/>
     </linearGradient>
     <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.25)"/>
+      <stop offset="0%" stop-color="rgba(255,255,255,0.2)"/>
       <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </linearGradient>
   </defs>
@@ -20,15 +20,15 @@
   <!-- Subtle glass shine -->
   <rect width="512" height="256" rx="112" ry="112" fill="url(#shine)"/>
 
-  <!-- Bar chart: 3 bars representing growth -->
-  <rect x="100" y="300" width="64" height="120" rx="14" fill="rgba(255,255,255,0.25)"/>
-  <rect x="224" y="220" width="64" height="200" rx="14" fill="rgba(255,255,255,0.35)"/>
-  <rect x="348" y="140" width="64" height="280" rx="14" fill="rgba(255,255,255,0.5)"/>
+  <!-- Bar chart: 3 bars - more opaque for small size readability -->
+  <rect x="96" y="310" width="76" height="116" rx="16" fill="rgba(255,255,255,0.35)"/>
+  <rect x="218" y="225" width="76" height="201" rx="16" fill="rgba(255,255,255,0.5)"/>
+  <rect x="340" y="140" width="76" height="286" rx="16" fill="rgba(255,255,255,0.7)"/>
 
-  <!-- Upward trend line -->
-  <path d="M 132 280 Q 200 240, 256 200 T 380 120" fill="none" stroke="url(#accent)" stroke-width="14" stroke-linecap="round"/>
+  <!-- Upward trend line - thicker, brighter green -->
+  <path d="M 134 290 Q 200 245, 256 200 T 378 118" fill="none" stroke="url(#accent)" stroke-width="20" stroke-linecap="round"/>
 
-  <!-- Arrow head at end of trend -->
-  <circle cx="380" cy="120" r="18" fill="url(#accent)"/>
-  <path d="M 370 130 L 380 108 L 392 126" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Arrow dot at end of trend -->
+  <circle cx="378" cy="118" r="24" fill="url(#accent)"/>
+  <path d="M 366 132 L 378 106 L 392 128" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
