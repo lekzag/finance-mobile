@@ -449,6 +449,45 @@
     background: var(--primary);
     flex-shrink: 0;
   }
+
+  /* ─── Autocomplete ─── */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-list {
+    position: absolute;
+    z-index: 50;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    overflow: hidden;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .autocomplete-item {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 15px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(241, 245, 249, 0.6);
+    cursor: pointer;
+    color: var(--text);
+    font-family: inherit;
+  }
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:active { background: var(--primary-light); color: var(--primary-solid); }
+  .autocomplete-item mark {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--primary-solid);
+    font-weight: 700;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
 </style>
 </head>
 <body>
@@ -496,6 +535,7 @@ async function gistFetch() {
     gistTxs = JSON.parse(data.files[GIST_FILENAME]?.content || '[]');
   } catch { gistTxs = []; }
   gistLoaded = true;
+  saveDescriptionCache();
 }
 
 async function gistSave() {
@@ -600,6 +640,70 @@ function showToast(msg) {
   setTimeout(() => { state.toast = null; render(); }, 2000);
 }
 
+// ─── Description autocomplete ───
+let descSuggestions = [];
+let showDescDropdown = false;
+
+function getKnownDescriptions() {
+  const counts = {};
+  gistTxs.forEach(tx => {
+    counts[tx.description] = (counts[tx.description] || 0) + 1;
+  });
+  // Also load from localStorage cache of past descriptions
+  try {
+    const cached = JSON.parse(localStorage.getItem('finance_desc_cache') || '[]');
+    cached.forEach(d => { if (!counts[d]) counts[d] = 1; });
+  } catch {}
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+}
+
+function saveDescriptionCache() {
+  const descs = [...new Set(gistTxs.map(tx => tx.description))];
+  localStorage.setItem('finance_desc_cache', JSON.stringify(descs));
+}
+
+function highlightMatch(text, query) {
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(query.toLowerCase());
+  if (idx === -1) return escHtml(text);
+  return escHtml(text.slice(0, idx)) + '<mark>' + escHtml(text.slice(idx, idx + query.length)) + '</mark>' + escHtml(text.slice(idx + query.length));
+}
+
+function onDescInput(val) {
+  state.form.description = val;
+  if (val.length >= 2) {
+    const lower = val.toLowerCase();
+    descSuggestions = getKnownDescriptions().filter(d => d.toLowerCase().includes(lower)).slice(0, 8);
+    showDescDropdown = descSuggestions.length > 0;
+  } else {
+    showDescDropdown = false;
+  }
+  renderDescDropdown();
+}
+
+function pickDescription(desc) {
+  state.form.description = desc;
+  showDescDropdown = false;
+  const input = document.getElementById('desc-field');
+  if (input) input.value = desc;
+  renderDescDropdown();
+}
+
+function renderDescDropdown() {
+  const container = document.getElementById('desc-suggestions');
+  if (!container) return;
+  if (!showDescDropdown || descSuggestions.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+  const query = state.form.description;
+  container.innerHTML = `<div class="autocomplete-list">
+    ${descSuggestions.map(d => `
+      <button class="autocomplete-item" onmousedown="event.preventDefault()" onclick="pickDescription('${escAttr(d)}')">${highlightMatch(d, query)}</button>
+    `).join('')}
+  </div>`;
+}
+
 // ─── SVG Logo ───
 const LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient><linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#2dd4bf"/></linearGradient><linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.2)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs><rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/><rect width="512" height="256" rx="112" ry="112" fill="url(#shine)"/><rect x="96" y="310" width="76" height="116" rx="16" fill="rgba(255,255,255,0.35)"/><rect x="218" y="225" width="76" height="201" rx="16" fill="rgba(255,255,255,0.5)"/><rect x="340" y="140" width="76" height="286" rx="16" fill="rgba(255,255,255,0.7)"/><path d="M 134 290 Q 200 245, 256 200 T 378 118" fill="none" stroke="url(#accent)" stroke-width="20" stroke-linecap="round"/><circle cx="378" cy="118" r="24" fill="url(#accent)"/><path d="M 366 132 L 378 106 L 392 128" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -683,8 +787,14 @@ function renderAdd() {
       </div>
       <div class="form-group">
         <label>Description</label>
-        <input type="text" placeholder="Ex: Courses Leclerc" value="${escHtml(f.description)}"
-          oninput="setField('description', this.value)">
+        <div class="autocomplete-wrap">
+          <input type="text" id="desc-field" placeholder="Ex: Courses Leclerc" value="${escHtml(f.description)}"
+            oninput="onDescInput(this.value)"
+            onfocus="onDescInput(this.value)"
+            onblur="setTimeout(function(){showDescDropdown=false;renderDescDropdown()},150)"
+            autocomplete="off">
+          <div id="desc-suggestions"></div>
+        </div>
       </div>
       <div class="form-group">
         <label>Date</label>
@@ -827,6 +937,7 @@ async function submitTx() {
       await gistAddTx(data);
       showToast('Transaction enregistrée');
     }
+    saveDescriptionCache();
     const keepDate = f.date;
     const keepType = f.type;
     resetForm();
