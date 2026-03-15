@@ -645,21 +645,39 @@ let descSuggestions = [];
 let showDescDropdown = false;
 
 function getKnownDescriptions() {
-  const counts = {};
+  // Build map: description -> { category, subcategory, count } (most frequent combo)
+  const map = {};
   gistTxs.forEach(tx => {
-    counts[tx.description] = (counts[tx.description] || 0) + 1;
+    const key = tx.description + '||' + tx.category + '||' + (tx.subcategory || '');
+    if (!map[key]) map[key] = { description: tx.description, category: tx.category, subcategory: tx.subcategory || '', count: 0 };
+    map[key].count++;
   });
-  // Also load from localStorage cache of past descriptions
+  // Also load from localStorage cache
   try {
     const cached = JSON.parse(localStorage.getItem('finance_desc_cache') || '[]');
-    cached.forEach(d => { if (!counts[d]) counts[d] = 1; });
+    cached.forEach(d => {
+      const key = d.description + '||' + d.category + '||' + (d.subcategory || '');
+      if (!map[key]) map[key] = { ...d, count: 1 };
+    });
   } catch {}
-  return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+  // Keep only the most frequent combo per description
+  const byDesc = {};
+  Object.values(map).forEach(entry => {
+    if (!byDesc[entry.description] || entry.count > byDesc[entry.description].count) {
+      byDesc[entry.description] = entry;
+    }
+  });
+  return Object.values(byDesc).sort((a, b) => b.count - a.count);
 }
 
 function saveDescriptionCache() {
-  const descs = [...new Set(gistTxs.map(tx => tx.description))];
-  localStorage.setItem('finance_desc_cache', JSON.stringify(descs));
+  const map = {};
+  gistTxs.forEach(tx => {
+    const key = tx.description;
+    if (!map[key]) map[key] = { description: tx.description, category: tx.category, subcategory: tx.subcategory || '', count: 0 };
+    map[key].count++;
+  });
+  localStorage.setItem('finance_desc_cache', JSON.stringify(Object.values(map)));
 }
 
 function highlightMatch(text, query) {
@@ -673,7 +691,7 @@ function onDescInput(val) {
   state.form.description = val;
   if (val.length >= 2) {
     const lower = val.toLowerCase();
-    descSuggestions = getKnownDescriptions().filter(d => d.toLowerCase().includes(lower)).slice(0, 8);
+    descSuggestions = getKnownDescriptions().filter(d => d.description.toLowerCase().includes(lower)).slice(0, 8);
     showDescDropdown = descSuggestions.length > 0;
   } else {
     showDescDropdown = false;
@@ -681,12 +699,17 @@ function onDescInput(val) {
   renderDescDropdown();
 }
 
-function pickDescription(desc) {
-  state.form.description = desc;
+function pickDescription(idx) {
+  const entry = descSuggestions[idx];
+  if (!entry) return;
+  state.form.description = entry.description;
+  state.form.category = entry.category;
+  state.form.subcategory = entry.subcategory || '';
   showDescDropdown = false;
   const input = document.getElementById('desc-field');
-  if (input) input.value = desc;
+  if (input) input.value = entry.description;
   renderDescDropdown();
+  render();
 }
 
 function renderDescDropdown() {
@@ -698,8 +721,11 @@ function renderDescDropdown() {
   }
   const query = state.form.description;
   container.innerHTML = `<div class="autocomplete-list">
-    ${descSuggestions.map(d => `
-      <button class="autocomplete-item" onmousedown="event.preventDefault()" onclick="pickDescription('${escAttr(d)}')">${highlightMatch(d, query)}</button>
+    ${descSuggestions.map((d, i) => `
+      <button class="autocomplete-item" onmousedown="event.preventDefault()" onclick="pickDescription(${i})">
+        ${highlightMatch(d.description, query)}
+        <span style="display:block;font-size:12px;color:var(--text-muted);margin-top:2px">${escHtml(d.category)}${d.subcategory ? ' › ' + escHtml(d.subcategory) : ''}</span>
+      </button>
     `).join('')}
   </div>`;
 }
