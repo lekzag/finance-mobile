@@ -512,6 +512,7 @@ function isConfigured() {
 
 // ─── Gist as database ───
 let gistTxs = []; // in-memory cache of gist transactions
+let gistDescriptions = []; // descriptions from desktop DB
 let gistLoaded = false;
 let gistLoading = false;
 
@@ -534,6 +535,9 @@ async function gistFetch() {
   try {
     gistTxs = JSON.parse(data.files[GIST_FILENAME]?.content || '[]');
   } catch { gistTxs = []; }
+  try {
+    gistDescriptions = JSON.parse(data.files['finance_descriptions.json']?.content || '[]');
+  } catch { gistDescriptions = []; }
   gistLoaded = true;
   saveDescriptionCache();
 }
@@ -647,12 +651,18 @@ let showDescDropdown = false;
 function getKnownDescriptions() {
   // Build map: description -> { category, subcategory, count } (most frequent combo)
   const map = {};
+  // 1. Desktop DB descriptions (highest priority, from finance_descriptions.json)
+  gistDescriptions.forEach(d => {
+    const key = d.description + '||' + d.category + '||' + (d.subcategory || '');
+    if (!map[key]) map[key] = { description: d.description, category: d.category, subcategory: d.subcategory || '', count: d.count || 1 };
+  });
+  // 2. Current gist transactions (pending, not yet imported)
   gistTxs.forEach(tx => {
     const key = tx.description + '||' + tx.category + '||' + (tx.subcategory || '');
     if (!map[key]) map[key] = { description: tx.description, category: tx.category, subcategory: tx.subcategory || '', count: 0 };
     map[key].count++;
   });
-  // Also load from localStorage cache
+  // 3. localStorage cache as fallback
   try {
     const cached = JSON.parse(localStorage.getItem('finance_desc_cache') || '[]');
     cached.forEach(d => {
