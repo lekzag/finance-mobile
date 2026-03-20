@@ -8,6 +8,9 @@
 <meta name="theme-color" content="#1e293b">
 <title>Finance - Ajout rapide</title>
 <style>
+  /* ═══════════════════════════════════════
+     VARIABLES
+     ═══════════════════════════════════════ */
   :root {
     --bg: linear-gradient(135deg, #f1f5f9 0%, #e8edf5 50%, #f0eef5 100%);
     --card-bg: rgba(255, 255, 255, 0.82);
@@ -30,6 +33,9 @@
     --radius-xs: 10px;
   }
 
+  /* ═══════════════════════════════════════
+     RESET & BASE
+     ═══════════════════════════════════════ */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
@@ -40,7 +46,6 @@
     -webkit-tap-highlight-color: transparent;
     min-height: 100vh;
   }
-
   .app {
     max-width: 520px;
     margin: 0 auto;
@@ -50,100 +55,74 @@
     flex-direction: column;
   }
 
-  /* ─── Header ─── */
+  /* ═══════════════════════════════════════
+     HEADER & NAVIGATION
+     ═══════════════════════════════════════ */
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 12px 0 20px;
   }
-  .header-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
   .header-logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    overflow: hidden;
+    width: 36px; height: 36px;
+    border-radius: 10px; overflow: hidden; flex-shrink: 0;
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
-    flex-shrink: 0;
   }
   .header-logo svg { width: 100%; height: 100%; display: block; }
   .header h1 {
-    font-size: 22px;
-    font-weight: 800;
+    font-size: 22px; font-weight: 800;
     background: linear-gradient(135deg, #1e293b, #475569);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
-
-  /* ─── Tab bar ─── */
   .tab-bar {
-    display: flex;
-    gap: 4px;
+    display: flex; gap: 4px;
     background: rgba(241, 245, 249, 0.9);
-    border-radius: var(--radius-sm);
-    padding: 4px;
+    border-radius: var(--radius-sm); padding: 4px;
     border: 1px solid var(--card-border);
     backdrop-filter: blur(8px);
   }
   .tab {
-    padding: 10px 16px;
-    border-radius: var(--radius-xs);
-    border: none;
-    background: none;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.25s ease;
-    position: relative;
+    padding: 10px 16px; border-radius: var(--radius-xs);
+    border: none; background: none;
+    font-size: 13px; font-weight: 600;
+    color: var(--text-secondary); cursor: pointer;
+    transition: all 0.25s ease; position: relative;
   }
   .tab.active {
-    background: white;
-    color: var(--primary-solid);
+    background: white; color: var(--primary-solid);
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   }
 
-  /* ─── Cards ─── */
+  /* ═══════════════════════════════════════
+     CARDS
+     ═══════════════════════════════════════ */
   .card {
     background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: var(--radius);
-    padding: 24px;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius); padding: 24px;
     box-shadow: var(--card-shadow);
     border: 1px solid var(--card-border);
     margin-bottom: 14px;
   }
 
-  /* ─── Form ─── */
+  /* ═══════════════════════════════════════
+     FORM ELEMENTS
+     ═══════════════════════════════════════ */
   .form-group { margin-bottom: 20px; }
   .form-group:last-child { margin-bottom: 0; }
   label {
-    display: block;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+    display: block; font-size: 13px; font-weight: 700;
+    color: var(--text-secondary); margin-bottom: 8px;
+    text-transform: uppercase; letter-spacing: 0.3px;
   }
   input, select, textarea {
-    width: 100%;
-    border: 2px solid var(--input-border);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    font-size: 17px;
-    font-family: inherit;
-    outline: none;
-    transition: all 0.25s ease;
-    -webkit-appearance: none;
-    background: rgba(255,255,255,0.7);
-    color: var(--text);
+    width: 100%; border: 2px solid var(--input-border);
+    border-radius: var(--radius-sm); padding: 14px 16px;
+    font-size: 17px; font-family: inherit; outline: none;
+    transition: all 0.25s ease; -webkit-appearance: none;
+    background: rgba(255,255,255,0.7); color: var(--text);
   }
   input:focus, select:focus, textarea:focus {
     border-color: var(--input-focus);
@@ -152,200 +131,134 @@
   }
   input::placeholder, textarea::placeholder { color: var(--text-muted); }
   textarea { resize: none; height: 80px; }
-
   .amount-input {
-    font-size: 36px;
-    font-weight: 800;
-    text-align: center;
-    padding: 20px 16px;
-    letter-spacing: -0.5px;
+    font-size: 36px; font-weight: 800; text-align: center;
+    padding: 20px 16px; letter-spacing: -0.5px;
     background: rgba(255,255,255,0.5);
   }
   .amount-input:focus { background: white; }
 
-  /* ─── Type toggle ─── */
+  /* ═══════════════════════════════════════
+     TYPE TOGGLE
+     ═══════════════════════════════════════ */
   .type-toggle { display: flex; gap: 10px; }
   .type-btn {
-    flex: 1;
-    padding: 16px;
+    flex: 1; padding: 16px;
     border: 2px solid var(--input-border);
     border-radius: var(--radius-sm);
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: center;
-    background: rgba(255,255,255,0.5);
-    transition: all 0.25s ease;
-    color: var(--text-secondary);
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    text-align: center; background: rgba(255,255,255,0.5);
+    transition: all 0.25s ease; color: var(--text-secondary);
   }
   .type-btn.expense.active {
     background: linear-gradient(135deg, #fef2f2, #fff1f2);
-    border-color: #fca5a5;
-    color: #dc2626;
+    border-color: #fca5a5; color: #dc2626;
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);
   }
   .type-btn.revenue.active {
     background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-    border-color: #86efac;
-    color: #16a34a;
+    border-color: #86efac; color: #16a34a;
     box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12);
   }
 
-  /* ─── Category chips ─── */
+  /* ═══════════════════════════════════════
+     CATEGORY CHIPS
+     ═══════════════════════════════════════ */
   .cat-grid { display: flex; flex-wrap: wrap; gap: 8px; }
   .cat-chip {
-    padding: 10px 16px;
-    border-radius: 24px;
+    padding: 10px 16px; border-radius: 24px;
     border: 2px solid var(--input-border);
     background: rgba(255,255,255,0.6);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-secondary);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s ease; color: var(--text-secondary);
   }
   .cat-chip.active {
     background: var(--primary-light);
-    border-color: var(--primary-solid);
-    color: var(--primary-solid);
+    border-color: var(--primary-solid); color: var(--primary-solid);
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
   }
-  .cat-chip.sub {
-    font-size: 13px;
-    padding: 8px 14px;
-  }
+  .cat-chip.sub { font-size: 13px; padding: 8px 14px; }
 
-  /* ─── Buttons ─── */
+  /* ═══════════════════════════════════════
+     BUTTONS
+     ═══════════════════════════════════════ */
   .btn {
-    width: 100%;
-    padding: 18px;
-    border: none;
+    width: 100%; padding: 18px; border: none;
     border-radius: var(--radius-sm);
-    font-size: 17px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    letter-spacing: 0.2px;
+    font-size: 17px; font-weight: 700; cursor: pointer;
+    transition: all 0.25s ease; letter-spacing: 0.2px;
   }
   .btn-primary {
-    background: var(--success);
-    color: white;
+    background: var(--success); color: white;
     box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
   }
-  .btn-primary:active {
-    transform: scale(0.97);
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-  }
-  .btn-danger {
-    background: var(--danger);
-    color: white;
-    font-size: 14px;
-    padding: 14px;
-  }
+  .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2); }
+  .btn-danger { background: var(--danger); color: white; font-size: 14px; padding: 14px; }
   .btn-warn {
-    background: linear-gradient(135deg, #f59e0b, #f97316);
-    color: white;
+    background: linear-gradient(135deg, #f59e0b, #f97316); color: white;
     box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
   }
-  .btn-warn:active {
-    transform: scale(0.97);
-  }
+  .btn-warn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.5; pointer-events: none; }
 
-  /* ─── Transaction list ─── */
+  /* ═══════════════════════════════════════
+     TRANSACTION LIST
+     ═══════════════════════════════════════ */
   .tx-item {
-    display: flex;
-    align-items: center;
-    padding: 14px 0;
-    border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+    display: flex; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid rgba(241, 245, 249, 0.8);
   }
   .tx-item:last-child { border-bottom: none; }
   .tx-info { flex: 1; min-width: 0; cursor: pointer; }
   .tx-desc {
-    font-size: 15px;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text);
+    font-size: 15px; font-weight: 700;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text);
   }
-  .tx-meta {
-    font-size: 13px;
-    color: var(--text-muted);
-    margin-top: 3px;
-  }
-  .tx-amount {
-    font-size: 16px;
-    font-weight: 800;
-    margin-left: 12px;
-    white-space: nowrap;
-  }
+  .tx-meta { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+  .tx-amount { font-size: 16px; font-weight: 800; margin-left: 12px; white-space: nowrap; }
   .tx-amount.expense { color: var(--danger); }
   .tx-amount.revenue { color: var(--success-solid); }
   .tx-actions { display: flex; gap: 4px; margin-left: 8px; }
   .tx-btn {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: var(--radius-xs);
-    transition: all 0.2s ease;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none;
+    font-size: 18px; cursor: pointer;
+    border-radius: var(--radius-xs); transition: all 0.2s ease;
   }
   .tx-btn:active { background: rgba(241, 245, 249, 0.8); }
   .tx-btn.edit { color: var(--primary-solid); }
   .tx-btn.delete { color: var(--text-muted); }
   .tx-btn.delete:active { color: var(--danger); }
 
-  /* ─── Status bars ─── */
+  /* ═══════════════════════════════════════
+     STATUS, BADGE, TOAST
+     ═══════════════════════════════════════ */
   .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 14px;
-    font-size: 14px;
-    font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-radius: var(--radius-sm);
+    margin-bottom: 14px; font-size: 14px; font-weight: 600;
     backdrop-filter: blur(8px);
   }
   .status-bar.ok { background: rgba(240, 253, 244, 0.8); color: #166534; border: 1px solid rgba(134, 239, 172, 0.3); }
   .status-bar.err { background: rgba(254, 242, 242, 0.8); color: #991b1b; border: 1px solid rgba(252, 165, 165, 0.3); }
   .status-bar.warn { background: rgba(254, 252, 232, 0.8); color: #854d0e; border: 1px solid rgba(253, 224, 71, 0.3); }
   .status-bar.info { background: rgba(238, 242, 255, 0.8); color: #4338ca; border: 1px solid rgba(165, 180, 252, 0.3); }
-
   .badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; padding: 0 7px;
     border-radius: 11px;
     background: linear-gradient(135deg, #ef4444, #f43f5e);
-    color: white;
-    font-size: 11px;
-    font-weight: 800;
+    color: white; font-size: 11px; font-weight: 800;
     box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
   }
-
-  /* ─── Toast ─── */
   .toast {
     position: fixed;
     bottom: max(24px, env(safe-area-inset-bottom, 24px));
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--text);
-    color: white;
-    padding: 14px 28px;
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    font-weight: 600;
-    z-index: 100;
+    left: 50%; transform: translateX(-50%);
+    background: var(--text); color: white;
+    padding: 14px 28px; border-radius: var(--radius-sm);
+    font-size: 15px; font-weight: 600; z-index: 100;
     animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   }
@@ -354,139 +267,80 @@
     to { transform: translateX(-50%) translateY(0); opacity: 1; }
   }
 
-  /* ─── Config ─── */
+  /* ═══════════════════════════════════════
+     CONFIG, EDIT BANNER, LOADERS, SETUP
+     ═══════════════════════════════════════ */
   .config-field { margin-bottom: 16px; }
   .config-field input { font-size: 15px; font-family: 'SF Mono', 'Fira Code', monospace; }
   .config-field .hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
-
-  /* ─── Edit banner ─── */
   .edit-banner {
     background: var(--primary-light);
     border: 2px solid rgba(99, 102, 241, 0.25);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
+    border-radius: var(--radius-sm); padding: 14px 16px;
     margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
   }
   .edit-banner span { font-size: 14px; font-weight: 700; color: var(--primary-solid); }
   .edit-banner button {
-    padding: 8px 16px;
-    border: 1.5px solid rgba(99, 102, 241, 0.3);
-    border-radius: var(--radius-xs);
-    background: white;
-    color: var(--primary-solid);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
+    padding: 8px 16px; border: 1.5px solid rgba(99, 102, 241, 0.3);
+    border-radius: var(--radius-xs); background: white;
+    color: var(--primary-solid); font-size: 13px; font-weight: 700; cursor: pointer;
   }
-
-  /* ─── Loader ─── */
   .loader {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
+    display: inline-block; width: 18px; height: 18px;
     border: 2.5px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
+    border-top-color: white; border-radius: 50%;
     animation: spin 0.7s linear infinite;
-    vertical-align: middle;
-    margin-right: 8px;
+    vertical-align: middle; margin-right: 8px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .loader-page {
     border-color: var(--input-border);
     border-top-color: var(--primary-solid);
-    width: 36px;
-    height: 36px;
-    border-width: 3px;
+    width: 36px; height: 36px; border-width: 3px;
   }
-
-  /* ─── Not configured ─── */
-  .not-configured {
-    text-align: center;
-    padding: 48px 24px;
-  }
+  .not-configured { text-align: center; padding: 48px 24px; }
   .not-configured .icon-wrap {
-    width: 72px;
-    height: 72px;
-    border-radius: 18px;
-    overflow: hidden;
-    margin: 0 auto 20px;
+    width: 72px; height: 72px; border-radius: 18px;
+    overflow: hidden; margin: 0 auto 20px;
     box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25);
   }
   .not-configured .icon-wrap svg { width: 100%; height: 100%; display: block; }
-  .not-configured h2 {
-    font-size: 22px;
-    font-weight: 800;
-    margin-bottom: 8px;
-    color: var(--text);
-  }
-  .not-configured p {
-    font-size: 15px;
-    color: var(--text-secondary);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  /* ─── Section title ─── */
+  .not-configured h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+  .not-configured p { font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.5; }
   .section-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 15px; font-weight: 800; color: var(--text);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
   }
   .section-title::before {
-    content: '';
-    width: 4px;
-    height: 18px;
-    border-radius: 2px;
-    background: var(--primary);
-    flex-shrink: 0;
+    content: ''; width: 4px; height: 18px;
+    border-radius: 2px; background: var(--primary); flex-shrink: 0;
   }
 
-  /* ─── Autocomplete ─── */
+  /* ═══════════════════════════════════════
+     AUTOCOMPLETE
+     ═══════════════════════════════════════ */
   .autocomplete-wrap { position: relative; }
   .autocomplete-list {
-    position: absolute;
-    z-index: 50;
-    left: 0;
-    right: 0;
-    top: 100%;
-    margin-top: 4px;
-    background: white;
-    border: 1px solid var(--card-border);
+    position: absolute; z-index: 50;
+    left: 0; right: 0; top: 100%; margin-top: 4px;
+    background: white; border: 1px solid var(--card-border);
     border-radius: var(--radius-sm);
     box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    overflow: hidden;
-    max-height: 220px;
-    overflow-y: auto;
+    overflow: hidden; max-height: 220px; overflow-y: auto;
   }
   .autocomplete-item {
-    width: 100%;
-    text-align: left;
-    padding: 12px 16px;
-    font-size: 15px;
-    background: none;
-    border: none;
+    width: 100%; text-align: left; padding: 12px 16px;
+    font-size: 15px; background: none; border: none;
     border-bottom: 1px solid rgba(241, 245, 249, 0.6);
-    cursor: pointer;
-    color: var(--text);
-    font-family: inherit;
+    cursor: pointer; color: var(--text); font-family: inherit;
   }
   .autocomplete-item:last-child { border-bottom: none; }
   .autocomplete-item:active { background: var(--primary-light); color: var(--primary-solid); }
   .autocomplete-item mark {
     background: rgba(99, 102, 241, 0.12);
-    color: var(--primary-solid);
-    font-weight: 700;
-    border-radius: 2px;
-    padding: 0 1px;
+    color: var(--primary-solid); font-weight: 700;
+    border-radius: 2px; padding: 0 1px;
   }
 </style>
 </head>
@@ -495,107 +349,20 @@
 <div class="app" id="app"></div>
 
 <script>
-// ─── Config ───
+/* ═══════════════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════════════ */
 const CONFIG_KEY = 'finance_config';
+const DESC_CACHE_KEY = 'finance_desc_cache';
 const GIST_FILENAME = 'finance_sync.json';
+const DESC_FILENAME = 'finance_descriptions.json';
+const GITHUB_API = 'https://api.github.com';
 
-function getConfig() {
-  return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
-}
-function saveConfig(cfg) {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
-}
-function isConfigured() {
-  const cfg = getConfig();
-  return !!(cfg.github_token);
-}
+const FORM_DEFAULTS = {
+  type: 'expense', amount: '', description: '',
+  date: '', category: '', subcategory: '', notes: '',
+};
 
-// ─── Gist as database ───
-let gistTxs = []; // in-memory cache of gist transactions
-let gistDescriptions = []; // descriptions from desktop DB
-let gistLoaded = false;
-let gistLoading = false;
-
-async function gistFetch() {
-  const cfg = getConfig();
-  if (!cfg.github_token) throw new Error('Token non configuré');
-
-  if (!cfg.gist_id) {
-    // No gist yet, start empty
-    gistTxs = [];
-    gistLoaded = true;
-    return;
-  }
-
-  const res = await fetch(`https://api.github.com/gists/${cfg.gist_id}`, {
-    headers: { 'Authorization': `token ${cfg.github_token}` }
-  });
-  if (!res.ok) throw new Error(`Erreur GitHub: ${res.status}`);
-  const data = await res.json();
-  try {
-    gistTxs = JSON.parse(data.files[GIST_FILENAME]?.content || '[]');
-  } catch { gistTxs = []; }
-  try {
-    gistDescriptions = JSON.parse(data.files['finance_descriptions.json']?.content || '[]');
-  } catch { gistDescriptions = []; }
-  gistLoaded = true;
-  saveDescriptionCache();
-}
-
-async function gistSave() {
-  const cfg = getConfig();
-  if (!cfg.github_token) throw new Error('Token non configuré');
-
-  const content = JSON.stringify(gistTxs, null, 2);
-
-  if (cfg.gist_id) {
-    const res = await fetch(`https://api.github.com/gists/${cfg.gist_id}`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `token ${cfg.github_token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ files: { [GIST_FILENAME]: { content } } })
-    });
-    if (!res.ok) throw new Error(`Erreur sauvegarde: ${res.status}`);
-  } else {
-    const res = await fetch('https://api.github.com/gists', {
-      method: 'POST',
-      headers: { 'Authorization': `token ${cfg.github_token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        description: 'Finance App - Sync',
-        public: false,
-        files: { [GIST_FILENAME]: { content } }
-      })
-    });
-    if (!res.ok) throw new Error(`Erreur création Gist: ${res.status}`);
-    const data = await res.json();
-    cfg.gist_id = data.id;
-    saveConfig(cfg);
-  }
-}
-
-async function gistAddTx(txData) {
-  const tx = {
-    ...txData,
-    id: 'mob_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-    created_at: new Date().toISOString(),
-  };
-  gistTxs.push(tx);
-  await gistSave();
-  return tx;
-}
-
-async function gistUpdateTx(id, data) {
-  const idx = gistTxs.findIndex(t => t.id === id);
-  if (idx === -1) return;
-  gistTxs[idx] = { ...gistTxs[idx], ...data };
-  await gistSave();
-}
-
-async function gistDeleteTx(id) {
-  gistTxs = gistTxs.filter(t => t.id !== id);
-  await gistSave();
-}
-
-// ─── Categories ───
 const CATEGORIES = {
   expense: {
     "Alimentaire": ["Supermarché", "Magasin Bio", "Alimentation en ligne", "Divers Alimentation"],
@@ -623,11 +390,125 @@ const CATEGORIES = {
   }
 };
 
-// ─── App State ───
+const LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient><linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#2dd4bf"/></linearGradient><linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.2)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs><rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/><rect width="512" height="256" rx="112" ry="112" fill="url(#shine)"/><rect x="96" y="310" width="76" height="116" rx="16" fill="rgba(255,255,255,0.35)"/><rect x="218" y="225" width="76" height="201" rx="16" fill="rgba(255,255,255,0.5)"/><rect x="340" y="140" width="76" height="286" rx="16" fill="rgba(255,255,255,0.7)"/><path d="M 134 290 Q 200 245, 256 200 T 378 118" fill="none" stroke="url(#accent)" stroke-width="20" stroke-linecap="round"/><circle cx="378" cy="118" r="24" fill="url(#accent)"/><path d="M 366 132 L 378 106 L 392 128" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function escHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG (localStorage persistence)
+   ═══════════════════════════════════════════════════════════════ */
+function getConfig() {
+  return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
+}
+function saveConfig(cfg) {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+function isConfigured() {
+  return !!getConfig().github_token;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GIST API (GitHub Gist as database)
+   ═══════════════════════════════════════════════════════════════ */
+let gistTxs = [];
+let gistDescriptions = [];
+let gistLoaded = false;
+
+function gistHeaders() {
+  const cfg = getConfig();
+  if (!cfg.github_token) throw new Error('Token non configuré');
+  return {
+    'Authorization': `token ${cfg.github_token}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function gistFetch() {
+  const cfg = getConfig();
+  const headers = gistHeaders();
+
+  if (!cfg.gist_id) {
+    gistTxs = [];
+    gistLoaded = true;
+    return;
+  }
+
+  const res = await fetch(`${GITHUB_API}/gists/${cfg.gist_id}`, { headers });
+  if (!res.ok) throw new Error(`Erreur GitHub: ${res.status}`);
+
+  const data = await res.json();
+  try { gistTxs = JSON.parse(data.files[GIST_FILENAME]?.content || '[]'); }
+  catch { gistTxs = []; }
+  try { gistDescriptions = JSON.parse(data.files[DESC_FILENAME]?.content || '[]'); }
+  catch { gistDescriptions = []; }
+
+  gistLoaded = true;
+  saveDescriptionCache();
+}
+
+async function gistSave() {
+  const cfg = getConfig();
+  const headers = gistHeaders();
+  const content = JSON.stringify(gistTxs, null, 2);
+  const files = { [GIST_FILENAME]: { content } };
+
+  if (cfg.gist_id) {
+    const res = await fetch(`${GITHUB_API}/gists/${cfg.gist_id}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ files }),
+    });
+    if (!res.ok) throw new Error(`Erreur sauvegarde: ${res.status}`);
+  } else {
+    const res = await fetch(`${GITHUB_API}/gists`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ description: 'Finance App - Sync', public: false, files }),
+    });
+    if (!res.ok) throw new Error(`Erreur création Gist: ${res.status}`);
+    cfg.gist_id = (await res.json()).id;
+    saveConfig(cfg);
+  }
+}
+
+async function gistAddTx(txData) {
+  const tx = {
+    ...txData,
+    id: 'mob_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    created_at: new Date().toISOString(),
+  };
+  gistTxs.push(tx);
+  await gistSave();
+  return tx;
+}
+
+async function gistUpdateTx(id, data) {
+  const idx = gistTxs.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  gistTxs[idx] = { ...gistTxs[idx], ...data };
+  await gistSave();
+}
+
+async function gistDeleteTx(id) {
+  gistTxs = gistTxs.filter(t => t.id !== id);
+  await gistSave();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   APP STATE
+   ═══════════════════════════════════════════════════════════════ */
 let state = {
   tab: 'add',
   editingId: null,
-  form: { type: 'expense', amount: '', description: '', date: new Date().toISOString().slice(0, 10), category: '', subcategory: '', notes: '' },
+  form: { ...FORM_DEFAULTS, date: todayISO() },
   toast: null,
   saving: false,
   error: null,
@@ -635,7 +516,7 @@ let state = {
 
 function resetForm() {
   state.editingId = null;
-  state.form = { type: 'expense', amount: '', description: '', date: new Date().toISOString().slice(0, 10), category: '', subcategory: '', notes: '' };
+  state.form = { ...FORM_DEFAULTS, date: todayISO() };
 }
 
 function showToast(msg) {
@@ -644,32 +525,37 @@ function showToast(msg) {
   setTimeout(() => { state.toast = null; render(); }, 2000);
 }
 
-// ─── Description autocomplete ───
+/* ═══════════════════════════════════════════════════════════════
+   DESCRIPTION AUTOCOMPLETE
+   ═══════════════════════════════════════════════════════════════ */
 let descSuggestions = [];
 let showDescDropdown = false;
 
 function getKnownDescriptions() {
-  // Build map: description -> { category, subcategory, count } (most frequent combo)
   const map = {};
-  // 1. Desktop DB descriptions (highest priority, from finance_descriptions.json)
+
+  // 1. Desktop DB descriptions (highest priority)
   gistDescriptions.forEach(d => {
     const key = d.description + '||' + d.category + '||' + (d.subcategory || '');
     if (!map[key]) map[key] = { description: d.description, category: d.category, subcategory: d.subcategory || '', count: d.count || 1 };
   });
-  // 2. Current gist transactions (pending, not yet imported)
+
+  // 2. Current gist transactions (pending)
   gistTxs.forEach(tx => {
     const key = tx.description + '||' + tx.category + '||' + (tx.subcategory || '');
     if (!map[key]) map[key] = { description: tx.description, category: tx.category, subcategory: tx.subcategory || '', count: 0 };
     map[key].count++;
   });
+
   // 3. localStorage cache as fallback
   try {
-    const cached = JSON.parse(localStorage.getItem('finance_desc_cache') || '[]');
+    const cached = JSON.parse(localStorage.getItem(DESC_CACHE_KEY) || '[]');
     cached.forEach(d => {
       const key = d.description + '||' + d.category + '||' + (d.subcategory || '');
       if (!map[key]) map[key] = { ...d, count: 1 };
     });
   } catch {}
+
   // Keep only the most frequent combo per description
   const byDesc = {};
   Object.values(map).forEach(entry => {
@@ -683,16 +569,14 @@ function getKnownDescriptions() {
 function saveDescriptionCache() {
   const map = {};
   gistTxs.forEach(tx => {
-    const key = tx.description;
-    if (!map[key]) map[key] = { description: tx.description, category: tx.category, subcategory: tx.subcategory || '', count: 0 };
-    map[key].count++;
+    if (!map[tx.description]) map[tx.description] = { description: tx.description, category: tx.category, subcategory: tx.subcategory || '', count: 0 };
+    map[tx.description].count++;
   });
-  localStorage.setItem('finance_desc_cache', JSON.stringify(Object.values(map)));
+  localStorage.setItem(DESC_CACHE_KEY, JSON.stringify(Object.values(map)));
 }
 
 function highlightMatch(text, query) {
-  const lower = text.toLowerCase();
-  const idx = lower.indexOf(query.toLowerCase());
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
   if (idx === -1) return escHtml(text);
   return escHtml(text.slice(0, idx)) + '<mark>' + escHtml(text.slice(idx, idx + query.length)) + '</mark>' + escHtml(text.slice(idx + query.length));
 }
@@ -740,10 +624,44 @@ function renderDescDropdown() {
   </div>`;
 }
 
-// ─── SVG Logo ───
-const LOGO_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient><linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#2dd4bf"/></linearGradient><linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(255,255,255,0.2)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs><rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/><rect width="512" height="256" rx="112" ry="112" fill="url(#shine)"/><rect x="96" y="310" width="76" height="116" rx="16" fill="rgba(255,255,255,0.35)"/><rect x="218" y="225" width="76" height="201" rx="16" fill="rgba(255,255,255,0.5)"/><rect x="340" y="140" width="76" height="286" rx="16" fill="rgba(255,255,255,0.7)"/><path d="M 134 290 Q 200 245, 256 200 T 378 118" fill="none" stroke="url(#accent)" stroke-width="20" stroke-linecap="round"/><circle cx="378" cy="118" r="24" fill="url(#accent)"/><path d="M 366 132 L 378 106 L 392 128" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* ═══════════════════════════════════════════════════════════════
+   RENDER HELPERS (small reusable template fragments)
+   ═══════════════════════════════════════════════════════════════ */
+function renderChips(items, selected, onclick, sub) {
+  const cls = sub ? 'cat-chip sub' : 'cat-chip';
+  return items.map(item =>
+    `<button class="${cls} ${selected === item ? 'active' : ''}" onclick="${onclick}('${escAttr(item)}')">${escHtml(item)}</button>`
+  ).join('');
+}
 
-// ─── Render ───
+function renderConfigField(label, type, value, placeholder, hint, onchange) {
+  return `
+    <div class="config-field">
+      <label>${escHtml(label)}</label>
+      <input type="${type}" value="${escAttr(value)}" placeholder="${escAttr(placeholder)}"
+        onchange="${onchange}">
+      <div class="hint">${hint}</div>
+    </div>`;
+}
+
+function renderTxItem(tx) {
+  return `
+    <div class="tx-item">
+      <div class="tx-info" onclick="editTx('${escAttr(tx.id)}')">
+        <div class="tx-desc">${escHtml(tx.description)}</div>
+        <div class="tx-meta">${tx.date} &middot; ${escHtml(tx.category)}${tx.subcategory ? ' &rsaquo; ' + escHtml(tx.subcategory) : ''}</div>
+      </div>
+      <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${parseFloat(tx.amount).toFixed(2)} &euro;</div>
+      <div class="tx-actions">
+        <button class="tx-btn edit" onclick="editTx('${escAttr(tx.id)}')" title="Modifier">&#9998;</button>
+        <button class="tx-btn delete" onclick="removeTx('${escAttr(tx.id)}')" title="Supprimer">&times;</button>
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER (main routing + page templates)
+   ═══════════════════════════════════════════════════════════════ */
 function render() {
   const app = document.getElementById('app');
 
@@ -762,7 +680,6 @@ function render() {
   }
 
   const count = gistTxs.length;
-
   app.innerHTML = `
     <div class="header">
       <div class="header-brand">
@@ -841,9 +758,7 @@ function renderAdd() {
       <div class="form-group">
         <label>Catégorie</label>
         <div class="cat-grid">
-          ${Object.keys(cats).map(c => `
-            <button class="cat-chip ${f.category === c ? 'active' : ''}" onclick="setCat('${escAttr(c)}')">${escHtml(c)}</button>
-          `).join('')}
+          ${renderChips(Object.keys(cats), f.category, 'setCat', false)}
         </div>
         <input type="text" style="margin-top:10px" placeholder="Ou saisir une nouvelle..."
           value="${escHtml(f.category)}" oninput="setField('category', this.value)">
@@ -853,9 +768,7 @@ function renderAdd() {
           <label>Sous-catégorie</label>
           ${subcats.length > 0 ? `
             <div class="cat-grid">
-              ${subcats.map(s => `
-                <button class="cat-chip sub ${f.subcategory === s ? 'active' : ''}" onclick="setSubcat('${escAttr(s)}')">${escHtml(s)}</button>
-              `).join('')}
+              ${renderChips(subcats, f.subcategory, 'setSubcat', true)}
             </div>
           ` : ''}
           <input type="text" style="margin-top:10px" placeholder="Ou saisir..."
@@ -877,20 +790,9 @@ function renderList() {
   return `
     <div class="card">
       <div class="section-title">Transactions en attente</div>
-      ${gistTxs.length === 0 ? '<p style="text-align:center;color:var(--text-muted);padding:28px 0;font-size:15px">Aucune transaction en attente</p>' : ''}
-      ${gistTxs.slice().reverse().map(tx => `
-        <div class="tx-item">
-          <div class="tx-info" onclick="editTx('${tx.id}')">
-            <div class="tx-desc">${escHtml(tx.description)}</div>
-            <div class="tx-meta">${tx.date} &middot; ${escHtml(tx.category)}${tx.subcategory ? ' &rsaquo; ' + escHtml(tx.subcategory) : ''}</div>
-          </div>
-          <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${parseFloat(tx.amount).toFixed(2)} &euro;</div>
-          <div class="tx-actions">
-            <button class="tx-btn edit" onclick="editTx('${tx.id}')" title="Modifier">&#9998;</button>
-            <button class="tx-btn delete" onclick="removeTx('${tx.id}')" title="Supprimer">&times;</button>
-          </div>
-        </div>
-      `).join('')}
+      ${gistTxs.length === 0
+        ? '<p style="text-align:center;color:var(--text-muted);padding:28px 0;font-size:15px">Aucune transaction en attente</p>'
+        : gistTxs.slice().reverse().map(renderTxItem).join('')}
     </div>
     <div class="status-bar info" style="margin-top:4px">
       ${gistTxs.length} transaction(s) en attente d'import sur le desktop
@@ -903,18 +805,18 @@ function renderConfig() {
   return `
     <div class="card">
       <div class="section-title">Configuration GitHub Gist</div>
-      <div class="config-field">
-        <label>Token GitHub (scope: gist)</label>
-        <input type="password" value="${escAttr(cfg.github_token || '')}" placeholder="ghp_..."
-          onchange="saveCfg('github_token', this.value)">
-        <div class="hint">github.com/settings/tokens &gt; scope "gist" uniquement</div>
-      </div>
-      <div class="config-field">
-        <label>Gist ID (auto-rempli)</label>
-        <input type="text" value="${escAttr(cfg.gist_id || '')}" placeholder="Sera créé automatiquement"
-          onchange="saveCfg('gist_id', this.value)">
-        <div class="hint">Laissez vide pour créer un nouveau Gist</div>
-      </div>
+      ${renderConfigField(
+        'Token GitHub (scope: gist)', 'password',
+        cfg.github_token || '', 'ghp_...',
+        'github.com/settings/tokens &gt; scope "gist" uniquement',
+        "saveCfg('github_token', this.value)"
+      )}
+      ${renderConfigField(
+        'Gist ID (auto-rempli)', 'text',
+        cfg.gist_id || '', 'Sera créé automatiquement',
+        'Laissez vide pour créer un nouveau Gist',
+        "saveCfg('gist_id', this.value)"
+      )}
       ${!gistLoaded && isConfigured() ? `
         <button class="btn btn-primary" onclick="initGist()" style="margin-top:12px">Connecter</button>
       ` : ''}
@@ -922,12 +824,15 @@ function renderConfig() {
   `;
 }
 
-// ─── Actions ───
+/* ═══════════════════════════════════════════════════════════════
+   ACTIONS (event handlers)
+   ═══════════════════════════════════════════════════════════════ */
 function switchTab(tab) {
   if (tab !== 'add' && state.editingId) resetForm();
   state.tab = tab;
   render();
 }
+
 function setField(key, val) { state.form[key] = val; }
 function setType(type) { state.form.type = type; state.form.category = ''; state.form.subcategory = ''; render(); }
 function setCat(cat) { state.form.category = cat; state.form.subcategory = ''; render(); }
@@ -1008,32 +913,27 @@ function saveCfg(key, val) {
   const cfg = getConfig();
   cfg[key] = val.trim();
   saveConfig(cfg);
-  // If token was just set and gist not loaded yet, auto-connect
   if (key === 'github_token' && val.trim() && !gistLoaded) {
     initGist();
   }
 }
 
 async function initGist() {
-  gistLoading = true;
   render();
   try {
     await gistFetch();
   } catch (e) {
     state.error = e.message;
   } finally {
-    gistLoading = false;
     render();
   }
 }
 
-// ─── Helpers ───
-function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
-
-// ─── Init ───
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
 if (isConfigured()) {
-  render(); // show loading
+  render();
   gistFetch()
     .then(() => render())
     .catch(e => { state.error = e.message; gistLoaded = true; render(); });
