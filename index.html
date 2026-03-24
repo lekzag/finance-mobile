@@ -829,11 +829,6 @@ function switchTab(tab) {
   if (tab !== 'add' && state.editingId) resetForm();
   state.tab = tab;
   render();
-  if (tab === 'list') {
-    gistFetch()
-      .then(() => render())
-      .catch(e => { state.error = e.message; render(); });
-  }
 }
 
 function setField(key, val) { state.form[key] = val; }
