@@ -442,7 +442,7 @@ async function gistFetch() {
     return;
   }
 
-  const res = await fetch(`${GITHUB_API}/gists/${cfg.gist_id}`, { headers });
+  const res = await fetch(`${GITHUB_API}/gists/${cfg.gist_id}`, { headers, cache: 'no-store' });
   if (!res.ok) throw new Error(`Erreur GitHub: ${res.status}`);
 
   const data = await res.json();
