@@ -432,14 +432,30 @@ function gistHeaders() {
   };
 }
 
+async function gistAutoDetect(headers) {
+  try {
+    const res = await fetch(`${GITHUB_API}/gists?per_page=30`, { headers, cache: 'no-store' });
+    if (!res.ok) return null;
+    const gists = await res.json();
+    const match = gists.find(g => g.files && g.files[GIST_FILENAME]);
+    return match ? match.id : null;
+  } catch { return null; }
+}
+
 async function gistFetch() {
   const cfg = getConfig();
   const headers = gistHeaders();
 
   if (!cfg.gist_id) {
-    gistTxs = [];
-    gistLoaded = true;
-    return;
+    // Auto-détection : chercher un Gist contenant finance_sync.json
+    const found = await gistAutoDetect(headers);
+    if (!found) {
+      gistTxs = [];
+      gistLoaded = true;
+      return;
+    }
+    cfg.gist_id = found;
+    saveConfig(cfg);
   }
 
   const res = await fetch(`${GITHUB_API}/gists/${cfg.gist_id}`, { headers, cache: 'no-store' });
