@@ -665,7 +665,7 @@ function renderTxItem(tx) {
         <div class="tx-desc">${escHtml(tx.description)}</div>
         <div class="tx-meta">${tx.date} &middot; ${escHtml(tx.category)}${tx.subcategory ? ' &rsaquo; ' + escHtml(tx.subcategory) : ''}</div>
       </div>
-      <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${parseFloat(tx.amount).toFixed(2)} &euro;</div>
+      <div class="tx-amount ${tx.type === 'expense' && tx.amount >= 0 ? 'expense' : 'revenue'}">${tx.type === 'expense' && tx.amount > 0 ? '-' : tx.amount < 0 ? '+' : '+'}${Math.abs(parseFloat(tx.amount)).toFixed(2)} &euro;</div>
       <div class="tx-actions">
         <button class="tx-btn edit" onclick="editTx('${escAttr(tx.id)}')" title="Modifier">&#9998;</button>
         <button class="tx-btn delete" onclick="removeTx('${escAttr(tx.id)}')" title="Supprimer">&times;</button>
@@ -749,7 +749,7 @@ function renderAdd() {
       </div>
       <div class="form-group">
         <label>Montant (EUR)</label>
-        <input type="number" class="amount-input" inputmode="decimal" step="0.01" min="0"
+        <input type="number" class="amount-input" inputmode="decimal" step="0.01"
           placeholder="0,00" value="${f.amount}" oninput="setField('amount', this.value)" id="amount-field">
       </div>
       <div class="form-group">
@@ -877,7 +877,7 @@ async function submitTx() {
   const data = {
     date: f.date, description: f.description.trim(), notes: f.notes.trim() || null,
     type: f.type, category: f.category.trim(), subcategory: f.subcategory.trim() || null,
-    amount: Math.abs(parseFloat(f.amount)),
+    amount: parseFloat(f.amount),
   };
 
   state.saving = true;
