@@ -392,6 +392,16 @@
   .lock-card .lock-confirm {
     margin-top: 8px;
   }
+  .lock-remember {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 14px; justify-content: center;
+  }
+  .lock-remember input[type="checkbox"] {
+    width: 18px; height: 18px; accent-color: var(--primary-solid); cursor: pointer;
+  }
+  .lock-remember label {
+    color: #94a3b8; font-size: 14px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -410,6 +420,7 @@ const DESC_FILENAME = 'finance_descriptions.json';
 const GITHUB_API = 'https://api.github.com';
 const LOCK_KEY = 'finance_lock_hash';
 const UNLOCK_KEY = 'finance_unlocked';
+const TRUST_KEY = 'finance_trusted_device';
 
 /* ═══════════════════════════════════════════════════════════════
    AUTH / LOCK SCREEN
@@ -424,8 +435,18 @@ function isLockEnabled() {
   return !!localStorage.getItem(LOCK_KEY);
 }
 
+function generateToken() {
+  return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
 function isUnlocked() {
-  return sessionStorage.getItem(UNLOCK_KEY) === '1';
+  if (sessionStorage.getItem(UNLOCK_KEY) === '1') return true;
+  const trusted = localStorage.getItem(TRUST_KEY);
+  if (trusted && isLockEnabled()) {
+    sessionStorage.setItem(UNLOCK_KEY, '1');
+    return true;
+  }
+  return false;
 }
 
 function renderLockScreen() {
@@ -447,6 +468,10 @@ function renderLockScreen() {
         <p>Entrez votre mot de passe pour accéder à l'application</p>
         <input type="password" id="lock-pwd" placeholder="Mot de passe" autocomplete="off"
           onkeydown="if(event.key==='Enter')unlockApp()">
+        <div class="lock-remember">
+          <input type="checkbox" id="lock-trust" checked>
+          <label for="lock-trust">Se souvenir sur cet appareil</label>
+        </div>
         <button class="lock-btn" onclick="unlockApp()">Déverrouiller</button>
         <div id="lock-err"></div>
       </div>
@@ -460,6 +485,10 @@ async function unlockApp() {
   const hash = await hashPassword(pwd);
   if (hash === localStorage.getItem(LOCK_KEY)) {
     sessionStorage.setItem(UNLOCK_KEY, '1');
+    const trust = document.getElementById('lock-trust');
+    if (trust && trust.checked) {
+      localStorage.setItem(TRUST_KEY, generateToken());
+    }
     renderLockScreen();
     render();
     if (isConfigured() && !gistLoaded) {
@@ -507,6 +536,7 @@ async function setupPassword() {
   }
   const hash = await hashPassword(pwd);
   localStorage.setItem(LOCK_KEY, hash);
+  localStorage.setItem(TRUST_KEY, generateToken());
   sessionStorage.setItem(UNLOCK_KEY, '1');
   renderLockScreen();
   render();
@@ -550,6 +580,7 @@ async function removePassword() {
   }
   if (!window.confirm('Supprimer la protection par mot de passe ?')) return;
   localStorage.removeItem(LOCK_KEY);
+  localStorage.removeItem(TRUST_KEY);
   sessionStorage.removeItem(UNLOCK_KEY);
   showToast('Protection désactivée');
   render();
@@ -557,6 +588,7 @@ async function removePassword() {
 
 function lockApp() {
   sessionStorage.removeItem(UNLOCK_KEY);
+  localStorage.removeItem(TRUST_KEY);
   renderLockScreen();
 }
 
@@ -1055,6 +1087,12 @@ function renderConfig() {
         </div>
         <div id="cfg-pwd-err"></div>
         <div class="config-field" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--card-border)">
+          ${localStorage.getItem(TRUST_KEY) ? `
+            <p style="color:var(--text-secondary);font-size:13px;margin-bottom:10px">&#128241; Cet appareil est mémorisé (pas de mot de passe au lancement)</p>
+            <button class="btn" onclick="localStorage.removeItem('${TRUST_KEY}');showToast('Appareil oublié');render()" style="margin-bottom:10px;background:rgba(239,68,68,0.08);color:var(--danger)">Oublier cet appareil</button>
+          ` : `
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:10px">Cet appareil n'est pas mémorisé</p>
+          `}
           <button class="btn" onclick="lockApp()" style="background:rgba(99,102,241,0.08);color:var(--primary-solid)">&#128274; Verrouiller maintenant</button>
         </div>
       ` : `
