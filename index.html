@@ -522,6 +522,7 @@ async function unlockApp() {
 }
 
 function renderSetupPassword() {
+  if (!isConfigured() || !gistLoaded) return;
   const el = document.getElementById('lock-screen');
   const appEl = document.getElementById('app');
   appEl.style.display = 'none';
@@ -1113,7 +1114,9 @@ function renderConfig() {
     </div>
     <div class="card" style="margin-top:12px">
       <div class="section-title">Protection par mot de passe</div>
-      ${isLockEnabled() ? `
+      ${!isConfigured() || !gistLoaded ? `
+        <p style="color:var(--text-muted);font-size:14px">Connectez-vous au Gist pour gérer le mot de passe</p>
+      ` : isLockEnabled() ? `
         <p style="color:var(--success-solid);font-size:14px;font-weight:600;margin-bottom:12px">&#10003; Protection activée</p>
         <div class="config-field">
           <label>Changer le mot de passe</label>
