@@ -1316,18 +1316,28 @@ async function initGist() {
 /* ═══════════════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════════════ */
-if (isUnlocked() && isConfigured()) {
-  // Appareil de confiance, token configuré : charger directement
+if (!isConfigured()) {
+  // Pas de token GitHub : lock screen (demandera token + mot de passe)
+  renderLockScreen();
+} else if (isLockEnabled() && !isUnlocked()) {
+  // Mot de passe connu (cache) et pas déverrouillé : lock screen
+  renderLockScreen();
+} else {
+  // Token configuré, soit pas de mdp connu soit appareil de confiance : charger le Gist
   document.getElementById('app').innerHTML = `<div style="text-align:center;padding:80px 24px">
     <div class="loader loader-page" style="margin:0 auto"></div>
     <p style="margin-top:16px;color:var(--text-secondary);font-weight:600">Chargement...</p>
   </div>`;
   gistFetch()
-    .then(() => render())
+    .then(() => {
+      // Après fetch, vérifier si un mdp existe dans le Gist
+      if (isLockEnabled() && !isUnlocked()) {
+        renderLockScreen();
+      } else {
+        render();
+      }
+    })
     .catch(e => { state.error = e.message; gistLoaded = true; render(); });
-} else {
-  // Pas déverrouillé ou pas configuré : lock screen
-  renderLockScreen();
 }
 </script>
 </body>
