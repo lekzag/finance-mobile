@@ -471,8 +471,11 @@ async function gistSaveAuth(hash) {
 function renderLockScreen() {
   const el = document.getElementById('lock-screen');
   const appEl = document.getElementById('app');
+  const locked = isLockEnabled() && !isUnlocked();
+  const needsToken = !isConfigured();
 
-  if (!isLockEnabled() || isUnlocked()) {
+  // Déverrouillé et token configuré : pas de lock screen
+  if (!locked && !needsToken) {
     el.innerHTML = '';
     appEl.style.display = '';
     return;
@@ -484,9 +487,15 @@ function renderLockScreen() {
       <div class="lock-card">
         <div class="lock-icon">&#128274;</div>
         <h2>Finance</h2>
-        <p>Entrez votre mot de passe pour accéder à l'application</p>
-        <input type="password" id="lock-pwd" placeholder="Mot de passe" autocomplete="off"
-          onkeydown="if(event.key==='Enter')unlockApp()">
+        <p>${needsToken ? 'Connectez-vous pour accéder à l\'application' : 'Entrez votre mot de passe pour accéder à l\'application'}</p>
+        ${locked || needsToken ? `
+          <input type="password" id="lock-pwd" placeholder="Mot de passe" autocomplete="off"
+            onkeydown="if(event.key==='Enter')unlockApp()">
+        ` : ''}
+        ${needsToken ? `
+          <input type="password" id="lock-token" class="lock-confirm" placeholder="Token GitHub" autocomplete="off"
+            onkeydown="if(event.key==='Enter')unlockApp()">
+        ` : ''}
         <div class="lock-remember">
           <input type="checkbox" id="lock-trust" checked>
           <label for="lock-trust">Se souvenir sur cet appareil</label>
@@ -495,30 +504,92 @@ function renderLockScreen() {
         <div id="lock-err"></div>
       </div>
     </div>`;
-  document.getElementById('lock-pwd').focus();
+  const pwdField = document.getElementById('lock-pwd');
+  if (pwdField) pwdField.focus();
 }
 
 async function unlockApp() {
-  const pwd = document.getElementById('lock-pwd').value;
-  if (!pwd) return;
+  const pwdField = document.getElementById('lock-pwd');
+  const tokenField = document.getElementById('lock-token');
+  const errEl = document.getElementById('lock-err');
+  const pwd = pwdField ? pwdField.value : '';
+  if (!pwd) { errEl.innerHTML = '<p class="lock-error">Mot de passe requis</p>'; return; }
+
   const hash = await hashPassword(pwd);
-  if (hash === getAuthHash()) {
-    sessionStorage.setItem(UNLOCK_KEY, '1');
-    const trust = document.getElementById('lock-trust');
-    if (trust && trust.checked) {
-      localStorage.setItem(TRUST_KEY, generateToken());
-    }
-    renderLockScreen();
-    // Charger le Gist si pas encore fait
-    if (isConfigured() && !gistLoaded) {
-      gistFetch().then(() => render()).catch(e => { state.error = e.message; gistLoaded = true; render(); });
-    }
-    render();
-  } else {
-    document.getElementById('lock-err').innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
-    document.getElementById('lock-pwd').value = '';
-    document.getElementById('lock-pwd').focus();
+
+  // Si on a déjà le hash en cache, vérifier directement
+  const cachedHash = getAuthHash();
+  if (cachedHash && hash !== cachedHash) {
+    errEl.innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
+    pwdField.value = '';
+    pwdField.focus();
+    return;
   }
+
+  // Si pas de token configuré, il faut le fournir
+  if (!isConfigured()) {
+    if (!tokenField || !tokenField.value.trim()) {
+      errEl.innerHTML = '<p class="lock-error">Token GitHub requis</p>';
+      return;
+    }
+    const token = tokenField.value.trim();
+    const cfg = getConfig();
+    cfg.github_token = token;
+    saveConfig(cfg);
+    try {
+      await gistFetch();
+    } catch (e) {
+      cfg.github_token = '';
+      saveConfig(cfg);
+      errEl.innerHTML = '<p class="lock-error">Token GitHub invalide</p>';
+      return;
+    }
+    // Vérifier le mot de passe contre le Gist
+    if (gistAuthHash && hash !== gistAuthHash) {
+      const cfg2 = getConfig();
+      cfg2.github_token = '';
+      saveConfig(cfg2);
+      gistLoaded = false;
+      gistAuthHash = null;
+      errEl.innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
+      pwdField.value = '';
+      pwdField.focus();
+      return;
+    }
+    // Si pas encore de mot de passe dans le Gist, enregistrer celui-ci
+    if (!gistAuthHash) {
+      try {
+        await gistSaveAuth(hash);
+        gistAuthHash = hash;
+        localStorage.setItem(AUTH_CACHE_KEY, hash);
+      } catch (e) {
+        errEl.innerHTML = `<p class="lock-error">${e.message}</p>`;
+        return;
+      }
+    }
+  } else if (!gistLoaded) {
+    try {
+      await gistFetch();
+    } catch (e) {
+      errEl.innerHTML = `<p class="lock-error">${e.message}</p>`;
+      return;
+    }
+    if (gistAuthHash && hash !== gistAuthHash) {
+      errEl.innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
+      pwdField.value = '';
+      pwdField.focus();
+      return;
+    }
+  }
+
+  // Succès
+  sessionStorage.setItem(UNLOCK_KEY, '1');
+  const trust = document.getElementById('lock-trust');
+  if (trust && trust.checked) {
+    localStorage.setItem(TRUST_KEY, generateToken());
+  }
+  renderLockScreen();
+  render();
 }
 
 function renderSetupPassword() {
@@ -956,8 +1027,8 @@ function renderTxItem(tx) {
 function render() {
   const app = document.getElementById('app');
 
-  if (!isConfigured()) {
-    app.innerHTML = renderSetup();
+  if (!isConfigured() || (isLockEnabled() && !isUnlocked())) {
+    renderLockScreen();
     return;
   }
 
@@ -990,17 +1061,6 @@ function render() {
     ${state.tab === 'list' ? renderList() : ''}
     ${state.tab === 'config' ? renderConfig() : ''}
     ${state.toast ? `<div class="toast">${escHtml(state.toast)}</div>` : ''}
-  `;
-}
-
-function renderSetup() {
-  return `
-    <div class="not-configured">
-      <div class="icon-wrap">${LOGO_SVG}</div>
-      <h2>Finance Mobile</h2>
-      <p>Configurez votre token GitHub pour commencer.<br>Les transactions sont stockées dans un Gist privé.</p>
-    </div>
-    ${renderConfig()}
   `;
 }
 
@@ -1256,26 +1316,18 @@ async function initGist() {
 /* ═══════════════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════════════ */
-// Si un mot de passe est connu (cache local), verrouiller immédiatement
-if (isLockEnabled() && !isUnlocked()) {
-  renderLockScreen();
-} else if (isConfigured()) {
+if (isUnlocked() && isConfigured()) {
+  // Appareil de confiance, token configuré : charger directement
   document.getElementById('app').innerHTML = `<div style="text-align:center;padding:80px 24px">
     <div class="loader loader-page" style="margin:0 auto"></div>
     <p style="margin-top:16px;color:var(--text-secondary);font-weight:600">Chargement...</p>
   </div>`;
   gistFetch()
-    .then(() => {
-      // Après fetch, vérifier si un mdp a été trouvé dans le Gist
-      if (isLockEnabled() && !isUnlocked()) {
-        renderLockScreen();
-      } else {
-        render();
-      }
-    })
+    .then(() => render())
     .catch(e => { state.error = e.message; gistLoaded = true; render(); });
 } else {
-  render();
+  // Pas déverrouillé ou pas configuré : lock screen
+  renderLockScreen();
 }
 </script>
 </body>
