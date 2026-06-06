@@ -418,13 +418,15 @@ const DESC_CACHE_KEY = 'finance_desc_cache';
 const GIST_FILENAME = 'finance_sync.json';
 const DESC_FILENAME = 'finance_descriptions.json';
 const GITHUB_API = 'https://api.github.com';
-const LOCK_KEY = 'finance_lock_hash';
+const AUTH_FILENAME = 'finance_auth.json';
 const UNLOCK_KEY = 'finance_unlocked';
 const TRUST_KEY = 'finance_trusted_device';
 
 /* ═══════════════════════════════════════════════════════════════
    AUTH / LOCK SCREEN
    ═══════════════════════════════════════════════════════════════ */
+let gistAuthHash = null; // hash stocké dans le Gist
+
 async function hashPassword(pwd) {
   const data = new TextEncoder().encode(pwd);
   const buf = await crypto.subtle.digest('SHA-256', data);
@@ -432,7 +434,7 @@ async function hashPassword(pwd) {
 }
 
 function isLockEnabled() {
-  return !!localStorage.getItem(LOCK_KEY);
+  return !!gistAuthHash;
 }
 
 function generateToken() {
@@ -441,12 +443,24 @@ function generateToken() {
 
 function isUnlocked() {
   if (sessionStorage.getItem(UNLOCK_KEY) === '1') return true;
-  const trusted = localStorage.getItem(TRUST_KEY);
-  if (trusted && isLockEnabled()) {
+  if (localStorage.getItem(TRUST_KEY) && isLockEnabled()) {
     sessionStorage.setItem(UNLOCK_KEY, '1');
     return true;
   }
   return false;
+}
+
+async function gistSaveAuth(hash) {
+  const cfg = getConfig();
+  const headers = gistHeaders();
+  const content = JSON.stringify({ password_hash: hash });
+  const files = { [AUTH_FILENAME]: hash ? { content } : { content: '{}' } };
+  if (cfg.gist_id) {
+    const res = await fetch(`${GITHUB_API}/gists/${cfg.gist_id}`, {
+      method: 'PATCH', headers, body: JSON.stringify({ files }),
+    });
+    if (!res.ok) throw new Error(`Erreur sauvegarde auth: ${res.status}`);
+  }
 }
 
 function renderLockScreen() {
@@ -483,7 +497,7 @@ async function unlockApp() {
   const pwd = document.getElementById('lock-pwd').value;
   if (!pwd) return;
   const hash = await hashPassword(pwd);
-  if (hash === localStorage.getItem(LOCK_KEY)) {
+  if (hash === gistAuthHash) {
     sessionStorage.setItem(UNLOCK_KEY, '1');
     const trust = document.getElementById('lock-trust');
     if (trust && trust.checked) {
@@ -491,9 +505,6 @@ async function unlockApp() {
     }
     renderLockScreen();
     render();
-    if (isConfigured() && !gistLoaded) {
-      gistFetch().then(() => render()).catch(e => { state.error = e.message; gistLoaded = true; render(); });
-    }
   } else {
     document.getElementById('lock-err').innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
     document.getElementById('lock-pwd').value = '';
@@ -535,14 +546,16 @@ async function setupPassword() {
     return;
   }
   const hash = await hashPassword(pwd);
-  localStorage.setItem(LOCK_KEY, hash);
-  localStorage.setItem(TRUST_KEY, generateToken());
-  sessionStorage.setItem(UNLOCK_KEY, '1');
-  renderLockScreen();
-  render();
-  showToast('Protection activée');
-  if (isConfigured() && !gistLoaded) {
-    gistFetch().then(() => render()).catch(e => { state.error = e.message; gistLoaded = true; render(); });
+  try {
+    await gistSaveAuth(hash);
+    gistAuthHash = hash;
+    localStorage.setItem(TRUST_KEY, generateToken());
+    sessionStorage.setItem(UNLOCK_KEY, '1');
+    renderLockScreen();
+    render();
+    showToast('Protection activée');
+  } catch (e) {
+    errEl.innerHTML = `<p class="lock-error">${e.message}</p>`;
   }
 }
 
@@ -552,7 +565,7 @@ async function changePassword() {
   const confirm = document.getElementById('cfg-pwd-confirm').value;
   const errEl = document.getElementById('cfg-pwd-err');
   const currHash = await hashPassword(curr);
-  if (currHash !== localStorage.getItem(LOCK_KEY)) {
+  if (currHash !== gistAuthHash) {
     errEl.innerHTML = '<p class="lock-error">Mot de passe actuel incorrect</p>';
     return;
   }
@@ -564,9 +577,15 @@ async function changePassword() {
     errEl.innerHTML = '<p class="lock-error">Les mots de passe ne correspondent pas</p>';
     return;
   }
-  localStorage.setItem(LOCK_KEY, await hashPassword(next));
-  showToast('Mot de passe modifié');
-  render();
+  try {
+    const hash = await hashPassword(next);
+    await gistSaveAuth(hash);
+    gistAuthHash = hash;
+    showToast('Mot de passe modifié');
+    render();
+  } catch (e) {
+    errEl.innerHTML = `<p class="lock-error">${e.message}</p>`;
+  }
 }
 
 async function removePassword() {
@@ -574,16 +593,21 @@ async function removePassword() {
   const errEl = document.getElementById('cfg-pwd-err');
   if (!curr) return;
   const currHash = await hashPassword(curr);
-  if (currHash !== localStorage.getItem(LOCK_KEY)) {
+  if (currHash !== gistAuthHash) {
     errEl.innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
     return;
   }
   if (!window.confirm('Supprimer la protection par mot de passe ?')) return;
-  localStorage.removeItem(LOCK_KEY);
-  localStorage.removeItem(TRUST_KEY);
-  sessionStorage.removeItem(UNLOCK_KEY);
-  showToast('Protection désactivée');
-  render();
+  try {
+    await gistSaveAuth(null);
+    gistAuthHash = null;
+    localStorage.removeItem(TRUST_KEY);
+    sessionStorage.removeItem(UNLOCK_KEY);
+    showToast('Protection désactivée');
+    render();
+  } catch (e) {
+    errEl.innerHTML = `<p class="lock-error">${e.message}</p>`;
+  }
 }
 
 function lockApp() {
@@ -700,6 +724,10 @@ async function gistFetch() {
   catch { gistTxs = []; }
   try { gistDescriptions = JSON.parse(data.files[DESC_FILENAME]?.content || '[]'); }
   catch { gistDescriptions = []; }
+  try {
+    const authData = JSON.parse(data.files[AUTH_FILENAME]?.content || '{}');
+    gistAuthHash = authData.password_hash || null;
+  } catch { gistAuthHash = null; }
 
   gistLoaded = true;
   saveDescriptionCache();
@@ -1211,12 +1239,20 @@ async function initGist() {
 /* ═══════════════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════════════ */
-if (isLockEnabled() && !isUnlocked()) {
-  renderLockScreen();
-} else if (isConfigured()) {
-  render();
+if (isConfigured()) {
+  // Afficher le chargement
+  document.getElementById('app').innerHTML = `<div style="text-align:center;padding:80px 24px">
+    <div class="loader loader-page" style="margin:0 auto"></div>
+    <p style="margin-top:16px;color:var(--text-secondary);font-weight:600">Chargement...</p>
+  </div>`;
   gistFetch()
-    .then(() => render())
+    .then(() => {
+      if (isLockEnabled() && !isUnlocked()) {
+        renderLockScreen();
+      } else {
+        render();
+      }
+    })
     .catch(e => { state.error = e.message; gistLoaded = true; render(); });
 } else {
   render();
