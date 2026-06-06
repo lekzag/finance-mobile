@@ -342,10 +342,61 @@
     color: var(--primary-solid); font-weight: 700;
     border-radius: 2px; padding: 0 1px;
   }
+
+  /* ═══════════════════════════════════════
+     LOCK SCREEN
+     ═══════════════════════════════════════ */
+  .lock-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lock-card {
+    width: 90%; max-width: 380px; padding: 40px 28px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius); text-align: center;
+    backdrop-filter: blur(20px);
+  }
+  .lock-card .lock-icon {
+    width: 64px; height: 64px; margin: 0 auto 20px;
+    background: rgba(99, 102, 241, 0.15);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .lock-card h2 {
+    color: #f1f5f9; font-size: 22px; font-weight: 700; margin-bottom: 6px;
+  }
+  .lock-card p {
+    color: #94a3b8; font-size: 14px; margin-bottom: 24px;
+  }
+  .lock-card input {
+    width: 100%; padding: 14px 16px; border-radius: var(--radius-xs);
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08);
+    color: #f1f5f9; font-size: 16px; font-family: inherit;
+    outline: none; transition: border-color 0.2s;
+  }
+  .lock-card input:focus { border-color: var(--primary-solid); }
+  .lock-card input::placeholder { color: #64748b; }
+  .lock-btn {
+    width: 100%; padding: 14px; margin-top: 12px;
+    border: none; border-radius: var(--radius-xs);
+    background: var(--primary); color: white;
+    font-size: 16px; font-weight: 700; font-family: inherit;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .lock-btn:active { opacity: 0.85; }
+  .lock-error {
+    color: #f87171; font-size: 13px; margin-top: 10px; font-weight: 600;
+  }
+  .lock-card .lock-confirm {
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
 
+<div id="lock-screen"></div>
 <div class="app" id="app"></div>
 
 <script>
@@ -357,6 +408,157 @@ const DESC_CACHE_KEY = 'finance_desc_cache';
 const GIST_FILENAME = 'finance_sync.json';
 const DESC_FILENAME = 'finance_descriptions.json';
 const GITHUB_API = 'https://api.github.com';
+const LOCK_KEY = 'finance_lock_hash';
+const UNLOCK_KEY = 'finance_unlocked';
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH / LOCK SCREEN
+   ═══════════════════════════════════════════════════════════════ */
+async function hashPassword(pwd) {
+  const data = new TextEncoder().encode(pwd);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isLockEnabled() {
+  return !!localStorage.getItem(LOCK_KEY);
+}
+
+function isUnlocked() {
+  return sessionStorage.getItem(UNLOCK_KEY) === '1';
+}
+
+function renderLockScreen() {
+  const el = document.getElementById('lock-screen');
+  const appEl = document.getElementById('app');
+
+  if (!isLockEnabled() || isUnlocked()) {
+    el.innerHTML = '';
+    appEl.style.display = '';
+    return;
+  }
+
+  appEl.style.display = 'none';
+  el.innerHTML = `
+    <div class="lock-overlay">
+      <div class="lock-card">
+        <div class="lock-icon">&#128274;</div>
+        <h2>Finance</h2>
+        <p>Entrez votre mot de passe pour accéder à l'application</p>
+        <input type="password" id="lock-pwd" placeholder="Mot de passe" autocomplete="off"
+          onkeydown="if(event.key==='Enter')unlockApp()">
+        <button class="lock-btn" onclick="unlockApp()">Déverrouiller</button>
+        <div id="lock-err"></div>
+      </div>
+    </div>`;
+  document.getElementById('lock-pwd').focus();
+}
+
+async function unlockApp() {
+  const pwd = document.getElementById('lock-pwd').value;
+  if (!pwd) return;
+  const hash = await hashPassword(pwd);
+  if (hash === localStorage.getItem(LOCK_KEY)) {
+    sessionStorage.setItem(UNLOCK_KEY, '1');
+    renderLockScreen();
+    render();
+    if (isConfigured() && !gistLoaded) {
+      gistFetch().then(() => render()).catch(e => { state.error = e.message; gistLoaded = true; render(); });
+    }
+  } else {
+    document.getElementById('lock-err').innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
+    document.getElementById('lock-pwd').value = '';
+    document.getElementById('lock-pwd').focus();
+  }
+}
+
+function renderSetupPassword() {
+  const el = document.getElementById('lock-screen');
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'none';
+  el.innerHTML = `
+    <div class="lock-overlay">
+      <div class="lock-card">
+        <div class="lock-icon">&#128272;</div>
+        <h2>Protégez votre app</h2>
+        <p>Choisissez un mot de passe pour sécuriser l'accès</p>
+        <input type="password" id="lock-new-pwd" placeholder="Mot de passe" autocomplete="off"
+          onkeydown="if(event.key==='Enter')document.getElementById('lock-confirm-pwd').focus()">
+        <input type="password" id="lock-confirm-pwd" class="lock-confirm" placeholder="Confirmer le mot de passe" autocomplete="off"
+          onkeydown="if(event.key==='Enter')setupPassword()">
+        <button class="lock-btn" onclick="setupPassword()">Activer la protection</button>
+        <div id="lock-err"></div>
+      </div>
+    </div>`;
+  document.getElementById('lock-new-pwd').focus();
+}
+
+async function setupPassword() {
+  const pwd = document.getElementById('lock-new-pwd').value;
+  const confirm = document.getElementById('lock-confirm-pwd').value;
+  const errEl = document.getElementById('lock-err');
+  if (!pwd || pwd.length < 4) {
+    errEl.innerHTML = '<p class="lock-error">4 caractères minimum</p>';
+    return;
+  }
+  if (pwd !== confirm) {
+    errEl.innerHTML = '<p class="lock-error">Les mots de passe ne correspondent pas</p>';
+    return;
+  }
+  const hash = await hashPassword(pwd);
+  localStorage.setItem(LOCK_KEY, hash);
+  sessionStorage.setItem(UNLOCK_KEY, '1');
+  renderLockScreen();
+  render();
+  showToast('Protection activée');
+  if (isConfigured() && !gistLoaded) {
+    gistFetch().then(() => render()).catch(e => { state.error = e.message; gistLoaded = true; render(); });
+  }
+}
+
+async function changePassword() {
+  const curr = document.getElementById('cfg-pwd-current').value;
+  const next = document.getElementById('cfg-pwd-new').value;
+  const confirm = document.getElementById('cfg-pwd-confirm').value;
+  const errEl = document.getElementById('cfg-pwd-err');
+  const currHash = await hashPassword(curr);
+  if (currHash !== localStorage.getItem(LOCK_KEY)) {
+    errEl.innerHTML = '<p class="lock-error">Mot de passe actuel incorrect</p>';
+    return;
+  }
+  if (!next || next.length < 4) {
+    errEl.innerHTML = '<p class="lock-error">4 caractères minimum</p>';
+    return;
+  }
+  if (next !== confirm) {
+    errEl.innerHTML = '<p class="lock-error">Les mots de passe ne correspondent pas</p>';
+    return;
+  }
+  localStorage.setItem(LOCK_KEY, await hashPassword(next));
+  showToast('Mot de passe modifié');
+  render();
+}
+
+async function removePassword() {
+  const curr = document.getElementById('cfg-pwd-remove').value;
+  const errEl = document.getElementById('cfg-pwd-err');
+  if (!curr) return;
+  const currHash = await hashPassword(curr);
+  if (currHash !== localStorage.getItem(LOCK_KEY)) {
+    errEl.innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
+    return;
+  }
+  if (!window.confirm('Supprimer la protection par mot de passe ?')) return;
+  localStorage.removeItem(LOCK_KEY);
+  sessionStorage.removeItem(UNLOCK_KEY);
+  showToast('Protection désactivée');
+  render();
+}
+
+function lockApp() {
+  sessionStorage.removeItem(UNLOCK_KEY);
+  renderLockScreen();
+}
 
 const FORM_DEFAULTS = {
   type: 'expense', amount: '', description: '',
@@ -835,6 +1037,31 @@ function renderConfig() {
         <button class="btn btn-primary" onclick="initGist()" style="margin-top:12px">Connecter</button>
       ` : ''}
     </div>
+    <div class="card" style="margin-top:12px">
+      <div class="section-title">Protection par mot de passe</div>
+      ${isLockEnabled() ? `
+        <p style="color:var(--success-solid);font-size:14px;font-weight:600;margin-bottom:12px">&#10003; Protection activée</p>
+        <div class="config-field">
+          <label>Changer le mot de passe</label>
+          <input type="password" id="cfg-pwd-current" placeholder="Mot de passe actuel" style="margin-bottom:6px">
+          <input type="password" id="cfg-pwd-new" placeholder="Nouveau mot de passe" style="margin-bottom:6px">
+          <input type="password" id="cfg-pwd-confirm" placeholder="Confirmer">
+          <button class="btn btn-primary" onclick="changePassword()" style="margin-top:10px">Modifier</button>
+        </div>
+        <div class="config-field" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--card-border)">
+          <label>Désactiver la protection</label>
+          <input type="password" id="cfg-pwd-remove" placeholder="Mot de passe actuel">
+          <button class="btn" onclick="removePassword()" style="margin-top:10px;background:rgba(239,68,68,0.08);color:var(--danger)">Supprimer le mot de passe</button>
+        </div>
+        <div id="cfg-pwd-err"></div>
+        <div class="config-field" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--card-border)">
+          <button class="btn" onclick="lockApp()" style="background:rgba(99,102,241,0.08);color:var(--primary-solid)">&#128274; Verrouiller maintenant</button>
+        </div>
+      ` : `
+        <p style="color:var(--text-secondary);font-size:14px;margin-bottom:12px">Aucun mot de passe configuré</p>
+        <button class="btn btn-primary" onclick="renderSetupPassword()">Activer la protection</button>
+      `}
+    </div>
   `;
 }
 
@@ -946,7 +1173,9 @@ async function initGist() {
 /* ═══════════════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════════════ */
-if (isConfigured()) {
+if (isLockEnabled() && !isUnlocked()) {
+  renderLockScreen();
+} else if (isConfigured()) {
   render();
   gistFetch()
     .then(() => render())
