@@ -421,6 +421,7 @@ const GITHUB_API = 'https://api.github.com';
 const AUTH_FILENAME = 'finance_auth.json';
 const UNLOCK_KEY = 'finance_unlocked';
 const TRUST_KEY = 'finance_trusted_device';
+const AUTH_CACHE_KEY = 'finance_auth_cache';
 
 /* ═══════════════════════════════════════════════════════════════
    AUTH / LOCK SCREEN
@@ -434,7 +435,11 @@ async function hashPassword(pwd) {
 }
 
 function isLockEnabled() {
-  return !!gistAuthHash;
+  return !!(gistAuthHash || localStorage.getItem(AUTH_CACHE_KEY));
+}
+
+function getAuthHash() {
+  return gistAuthHash || localStorage.getItem(AUTH_CACHE_KEY) || null;
 }
 
 function generateToken() {
@@ -497,13 +502,17 @@ async function unlockApp() {
   const pwd = document.getElementById('lock-pwd').value;
   if (!pwd) return;
   const hash = await hashPassword(pwd);
-  if (hash === gistAuthHash) {
+  if (hash === getAuthHash()) {
     sessionStorage.setItem(UNLOCK_KEY, '1');
     const trust = document.getElementById('lock-trust');
     if (trust && trust.checked) {
       localStorage.setItem(TRUST_KEY, generateToken());
     }
     renderLockScreen();
+    // Charger le Gist si pas encore fait
+    if (isConfigured() && !gistLoaded) {
+      gistFetch().then(() => render()).catch(e => { state.error = e.message; gistLoaded = true; render(); });
+    }
     render();
   } else {
     document.getElementById('lock-err').innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
@@ -549,6 +558,7 @@ async function setupPassword() {
   try {
     await gistSaveAuth(hash);
     gistAuthHash = hash;
+    localStorage.setItem(AUTH_CACHE_KEY, hash);
     localStorage.setItem(TRUST_KEY, generateToken());
     sessionStorage.setItem(UNLOCK_KEY, '1');
     renderLockScreen();
@@ -565,7 +575,7 @@ async function changePassword() {
   const confirm = document.getElementById('cfg-pwd-confirm').value;
   const errEl = document.getElementById('cfg-pwd-err');
   const currHash = await hashPassword(curr);
-  if (currHash !== gistAuthHash) {
+  if (currHash !== getAuthHash()) {
     errEl.innerHTML = '<p class="lock-error">Mot de passe actuel incorrect</p>';
     return;
   }
@@ -581,6 +591,7 @@ async function changePassword() {
     const hash = await hashPassword(next);
     await gistSaveAuth(hash);
     gistAuthHash = hash;
+    localStorage.setItem(AUTH_CACHE_KEY, hash);
     showToast('Mot de passe modifié');
     render();
   } catch (e) {
@@ -593,7 +604,7 @@ async function removePassword() {
   const errEl = document.getElementById('cfg-pwd-err');
   if (!curr) return;
   const currHash = await hashPassword(curr);
-  if (currHash !== gistAuthHash) {
+  if (currHash !== getAuthHash()) {
     errEl.innerHTML = '<p class="lock-error">Mot de passe incorrect</p>';
     return;
   }
@@ -601,6 +612,7 @@ async function removePassword() {
   try {
     await gistSaveAuth(null);
     gistAuthHash = null;
+    localStorage.removeItem(AUTH_CACHE_KEY);
     localStorage.removeItem(TRUST_KEY);
     sessionStorage.removeItem(UNLOCK_KEY);
     showToast('Protection désactivée');
@@ -727,6 +739,8 @@ async function gistFetch() {
   try {
     const authData = JSON.parse(data.files[AUTH_FILENAME]?.content || '{}');
     gistAuthHash = authData.password_hash || null;
+    if (gistAuthHash) localStorage.setItem(AUTH_CACHE_KEY, gistAuthHash);
+    else localStorage.removeItem(AUTH_CACHE_KEY);
   } catch { gistAuthHash = null; }
 
   gistLoaded = true;
@@ -1239,14 +1253,17 @@ async function initGist() {
 /* ═══════════════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════════════ */
-if (isConfigured()) {
-  // Afficher le chargement
+// Si un mot de passe est connu (cache local), verrouiller immédiatement
+if (isLockEnabled() && !isUnlocked()) {
+  renderLockScreen();
+} else if (isConfigured()) {
   document.getElementById('app').innerHTML = `<div style="text-align:center;padding:80px 24px">
     <div class="loader loader-page" style="margin:0 auto"></div>
     <p style="margin-top:16px;color:var(--text-secondary);font-weight:600">Chargement...</p>
   </div>`;
   gistFetch()
     .then(() => {
+      // Après fetch, vérifier si un mdp a été trouvé dans le Gist
       if (isLockEnabled() && !isUnlocked()) {
         renderLockScreen();
       } else {
